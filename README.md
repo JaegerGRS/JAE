@@ -37,6 +37,11 @@ Product defaults:
 2. Run scripts/run-desktop.ps1
 3. Use JAE AI as a native Windows desktop app
 
+Development app only:
+1. Run scripts/dev.ps1
+2. Use the native Tauri window that opens for development
+3. No standalone browser preview is required for normal use
+
 Auto sync and publish workflow:
 1. Run scripts/sync-validate-push.ps1
 2. Optional: pass a custom commit message, for example:
@@ -151,6 +156,7 @@ Do not edit defaults.yaml for machine-specific settings.
 ## Troubleshooting
 - If chat is unavailable, verify at least one local model is installed and the local inference runtime is online.
 - If inference health is offline, start your llama.cpp OpenAI-compatible server and ensure base URL matches config/defaults.yaml.
+- If an old browser preview is still open, stop it with scripts/stop.ps1 and relaunch scripts/dev.ps1.
 - Run tests with .\\.venv\\Scripts\\python.exe -m pytest.
 
 ## Folder Structure

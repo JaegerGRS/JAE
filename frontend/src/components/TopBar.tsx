@@ -39,7 +39,7 @@ export function TopBar() {
       </div>
       <div className="topbar-right">
         <div className="topbar-time">{now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
-        <div className="topbar-pill">localhost only</div>
+        <div className="topbar-pill">desktop runtime</div>
       </div>
     </header>
   );
