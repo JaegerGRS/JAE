@@ -27,6 +27,7 @@ Run `scripts/clean-workspace.ps1` to remove local generated artifacts and runtim
 ## Development
 1. Run `scripts/dev.ps1`
 2. Use the Tauri desktop window for development
+3. Tauri manages the local backend process automatically (no separate server command needed)
 
 ## Build MSI
 1. Run `scripts/build-tauri-msi.ps1`
@@ -54,3 +55,4 @@ Use for validated updates:
 - Model manifest: `config/models.yaml`
 - Supporters config: `config/supporters.json`
 - Runtime data remains local and is not used as a cloud inference backend.
+- The app is native-first: frontend plus a local backend process managed by the Tauri runtime.

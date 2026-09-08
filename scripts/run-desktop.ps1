@@ -14,7 +14,6 @@ if (!(Test-Path .\node_modules)) {
 }
 Pop-Location
 
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "Set-Location '$root'; .\.venv\Scripts\python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 8000"
 Push-Location frontend
 npm run tauri:dev
 Pop-Location

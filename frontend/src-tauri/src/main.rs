@@ -50,7 +50,29 @@ fn ensure_app_runtime(app: &tauri::AppHandle) -> Result<PathBuf, String> {
 
 fn spawn_backend(app: &tauri::AppHandle) -> Result<Child, String> {
     if cfg!(debug_assertions) {
-        return Err("dev mode uses the external backend started by scripts/dev.ps1".into());
+        let workspace_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .ok_or_else(|| String::from("failed to locate frontend root"))?
+            .parent()
+            .ok_or_else(|| String::from("failed to locate workspace root"))?
+            .to_path_buf();
+
+        let python_exe = workspace_root.join(".venv").join("Scripts").join("python.exe");
+        if !python_exe.exists() {
+            return Err(format!(
+                "python runtime not found at {}. Run scripts/install.ps1 first.",
+                python_exe.display()
+            ));
+        }
+
+        return Command::new(python_exe)
+            .arg("backend_runtime.py")
+            .current_dir(&workspace_root)
+            .env("JAE_AI_PROJECT_ROOT", &workspace_root)
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .map_err(|err| err.to_string());
     }
 
     let runtime_root = ensure_app_runtime(app)?;
@@ -75,12 +97,10 @@ fn main() {
     tauri::Builder::default()
         .manage(BackendState(Mutex::new(None)))
         .setup(|app| {
-            if !cfg!(debug_assertions) {
-                let child = spawn_backend(app.handle())?;
-                let state = app.state::<BackendState>();
-                let mut guard = state.0.lock().map_err(|_| String::from("backend state lock poisoned"))?;
-                *guard = Some(child);
-            }
+            let child = spawn_backend(app.handle())?;
+            let state = app.state::<BackendState>();
+            let mut guard = state.0.lock().map_err(|_| String::from("backend state lock poisoned"))?;
+            *guard = Some(child);
             Ok(())
         })
         .on_window_event(|window, event| {
