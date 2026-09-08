@@ -55,6 +55,8 @@ If site is not showing the built app:
 
 ## Encrypted Sync
 - Run scripts/secure-sync.ps1 to create and push encrypted backup snapshots.
+- Run scripts/setup-hourly-sync.ps1 to install a Windows scheduled task for hourly encrypted sync.
+- Run scripts/remove-hourly-sync.ps1 to remove the hourly scheduled task.
 - Encrypted snapshots are stored in vault/snapshots and can be restored later.
 - Backup encryption keys are local or environment-based and are never committed.
 - Important: source code in git remains visible to users with repository access; encrypted sync protects runtime/user data snapshots.
@@ -121,6 +123,8 @@ Do not edit defaults.yaml for machine-specific settings.
 - scripts/restore.ps1
 - scripts/run-desktop.ps1
 - scripts/secure-sync.ps1
+- scripts/setup-hourly-sync.ps1
+- scripts/remove-hourly-sync.ps1
 
 ## Troubleshooting
 - If frontend cannot call API, verify backend is running on 127.0.0.1:8000.

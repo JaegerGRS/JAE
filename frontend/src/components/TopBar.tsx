@@ -24,7 +24,7 @@ export function TopBar() {
   const [now, setNow] = useState<Date>(new Date());
 
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(new Date()), 1000);
+    const timer = window.setInterval(() => setNow(new Date()), 60000);
     return () => window.clearInterval(timer);
   }, []);
 
@@ -37,7 +37,7 @@ export function TopBar() {
         <p>Local-first runtime with private by default controls</p>
       </div>
       <div className="topbar-right">
-        <div className="topbar-time">{now.toLocaleTimeString()}</div>
+        <div className="topbar-time">{now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
         <div className="topbar-pill">localhost only</div>
       </div>
     </header>
