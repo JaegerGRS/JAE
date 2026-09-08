@@ -176,6 +176,9 @@ export function ChatPage() {
         <button className="chat-send" type="submit" disabled={streaming}>
           {streaming ? "Streaming..." : "Send"}
         </button>
+        <p className="muted chat-hint" style={{ margin: 0 }}>
+          Files stay local-only. JAE can browse and scan the internet for information. The selected AI stays open and free to use with no API keys required.
+        </p>
       </form>
     </section>
   );

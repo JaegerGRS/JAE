@@ -109,13 +109,17 @@ async def chat_stream(request: ChatRequest, chat_service=Depends(get_chat_servic
 
     async def event_stream():
         chunks: list[str] = []
-        async for token in chat_service.stream_generate(selected_model_id, request.messages):
-            chunks.append(token)
-            yield f"event: token\ndata: {json.dumps({'token': token})}\n\n"
+        try:
+            async for token in chat_service.stream_generate(selected_model_id, request.messages):
+                chunks.append(token)
+                yield f"event: token\ndata: {json.dumps({'token': token})}\n\n"
 
-        full = "".join(chunks)
-        if full:
-            chat_service.append_message(db, conversation_id, "assistant", full, model_id=selected_model_id)
-        yield f"event: done\ndata: {json.dumps({'conversation_id': conversation_id, 'model_id': selected_model_id})}\n\n"
+            full = "".join(chunks)
+            if full:
+                chat_service.append_message(db, conversation_id, "assistant", full, model_id=selected_model_id)
+            yield f"event: done\ndata: {json.dumps({'conversation_id': conversation_id, 'model_id': selected_model_id})}\n\n"
+        except Exception as exc:
+            message = str(exc) or "stream failed"
+            yield f"event: error\ndata: {json.dumps({'error': message})}\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")

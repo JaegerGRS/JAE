@@ -20,6 +20,11 @@ Milestone 1 foundation is implemented, plus initial Milestone 2 capabilities:
 - Windows install/dev/start scripts
 - core test suite
 
+Product defaults:
+- Files and project data stay local-only by default.
+- JAE can browse and scan internet sources for information when tool flows are enabled.
+- Selected AI models are open/free to use locally and do not require API keys.
+
 ## Requirements
 - Windows 10/11
 - Python 3.12+

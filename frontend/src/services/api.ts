@@ -193,6 +193,7 @@ export function streamChat(
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
+      let doneReceived = false;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -216,9 +217,19 @@ export function streamChat(
           }
           if (eventName === "done") {
             const parsed = JSON.parse(data) as { conversation_id: number; model_id: string };
+            doneReceived = true;
             handlers.onDone(parsed);
           }
+          if (eventName === "error") {
+            const parsed = JSON.parse(data) as { error?: string };
+            handlers.onError(parsed.error || "Streaming failed");
+            return;
+          }
         }
+      }
+
+      if (!doneReceived) {
+        handlers.onError("Stream ended unexpectedly");
       }
     })
     .catch((err: Error) => handlers.onError(err.message));
