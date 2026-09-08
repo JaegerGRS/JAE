@@ -36,6 +36,11 @@ Product defaults:
 2. Run scripts/dev.ps1
 3. Open frontend URL printed by Vite (default http://127.0.0.1:5173)
 
+Auto sync and publish workflow:
+1. Run scripts/sync-validate-push.ps1
+2. Optional: pass a custom commit message, for example:
+	scripts/sync-validate-push.ps1 -CommitMessage "feat: ui polish and fixes"
+
 Windows desktop app launcher:
 1. Run scripts/run-desktop.ps1
 
@@ -130,6 +135,7 @@ Do not edit defaults.yaml for machine-specific settings.
 - scripts/secure-sync.ps1
 - scripts/setup-hourly-sync.ps1
 - scripts/remove-hourly-sync.ps1
+- scripts/sync-validate-push.ps1
 
 ## Troubleshooting
 - If frontend cannot call API, verify backend is running on 127.0.0.1:8000.

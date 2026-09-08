@@ -64,7 +64,7 @@ export function Sidebar() {
         ))}
 
         <div className="nav-section">
-          <p className="nav-section-title">Advanced navigation is managed in Settings</p>
+          <p className="nav-note">Advanced navigation is managed in Settings</p>
         </div>
 
         {settings.showAdvancedNavigation &&

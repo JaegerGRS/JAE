@@ -104,7 +104,7 @@ export function SettingsPage() {
             </article>
 
             <article className="settings-card">
-              <h4>Assistant Capabilities</h4>
+              <h4>What JAE Can Do</h4>
               <label className="settings-line">
                 <span>Keep Files Local-Only</span>
                 <input

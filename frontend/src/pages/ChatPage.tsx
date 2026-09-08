@@ -60,53 +60,56 @@ export function ChatPage() {
     if (!text || streaming) {
       return;
     }
-
-    const cid = await ensureConversation();
     const userMessage: UiMessage = { id: crypto.randomUUID(), role: "user", content: text };
     const assistantMessageId = crypto.randomUUID();
 
-    setMessages((prev) => [
-      ...prev,
-      userMessage,
-      { id: assistantMessageId, role: "assistant", content: "" },
-    ]);
+    setMessages((prev) => [...prev, userMessage, { id: assistantMessageId, role: "assistant", content: "" }]);
     setInput("");
     setStreaming(true);
 
-    const payloadMessages: ChatMessage[] = [...messages, userMessage].map((m) => ({
-      role: m.role,
-      content: m.content,
-    }));
+    try {
+      const cid = await ensureConversation();
+      const payloadMessages: ChatMessage[] = [...messages, userMessage].map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
 
-    streamChat(
-      {
-        conversation_id: cid,
-        messages: payloadMessages,
-        task_type: settings.defaultTaskType,
-        model_id: selectedModelId !== "auto" ? selectedModelId : undefined,
-      },
-      {
-        onToken(token) {
-          setMessages((prev) =>
-            prev.map((m) => (m.id === assistantMessageId ? { ...m, content: m.content + token } : m))
-          );
+      streamChat(
+        {
+          conversation_id: cid,
+          messages: payloadMessages,
+          task_type: settings.defaultTaskType,
+          model_id: selectedModelId !== "auto" ? selectedModelId : undefined,
         },
-        onDone(done) {
-          setConversationId(done.conversation_id);
-          setStreaming(false);
-        },
-        onError(error) {
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === assistantMessageId
-                ? { ...m, content: `Streaming error: ${error}` }
-                : m
-            )
-          );
-          setStreaming(false);
-        },
-      }
-    );
+        {
+          onToken(token) {
+            setMessages((prev) =>
+              prev.map((m) => (m.id === assistantMessageId ? { ...m, content: m.content + token } : m))
+            );
+          },
+          onDone(done) {
+            setConversationId(done.conversation_id);
+            setStreaming(false);
+          },
+          onError(error) {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === assistantMessageId
+                  ? { ...m, content: `Streaming error: ${error}` }
+                  : m
+              )
+            );
+            setStreaming(false);
+          },
+        }
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to start chat";
+      setMessages((prev) =>
+        prev.map((m) => (m.id === assistantMessageId ? { ...m, content: `Connection error: ${message}` } : m))
+      );
+      setStreaming(false);
+    }
   }
 
   function onInputKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
