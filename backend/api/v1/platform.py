@@ -8,10 +8,12 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from backend.api.dependencies import get_config, get_database_session, get_hardware_detector
+from backend.core.paths import get_project_root
 from backend.core.schemas import ApiResponse
 from backend.database.models import Conversation, MemoryEntry
 
 router = APIRouter(tags=["platform"])
+PROJECT_ROOT = get_project_root()
 
 
 @router.get("/version", response_model=ApiResponse)
@@ -111,21 +113,21 @@ async def list_tools() -> ApiResponse:
 
 @router.get("/skills", response_model=ApiResponse)
 def list_skills() -> ApiResponse:
-    skills_dir = Path(__file__).resolve().parents[2] / "skills"
+    skills_dir = PROJECT_ROOT / "backend" / "skills"
     items = [p.name for p in skills_dir.glob("*") if p.is_file()]
     return ApiResponse(data={"count": len(items), "items": items})
 
 
 @router.get("/agents", response_model=ApiResponse)
 def list_agents() -> ApiResponse:
-    agents_dir = Path(__file__).resolve().parents[2] / "agents"
+    agents_dir = PROJECT_ROOT / "backend" / "agents"
     items = [p.name for p in agents_dir.glob("*") if p.is_file()]
     return ApiResponse(data={"count": len(items), "items": items})
 
 
 @router.get("/files", response_model=ApiResponse)
 def list_files(config=Depends(get_config)) -> ApiResponse:
-    workspace_dir = (Path(__file__).resolve().parents[3] / config.paths.workspace_dir).resolve()
+    workspace_dir = (PROJECT_ROOT / config.paths.workspace_dir).resolve()
     workspace_dir.mkdir(parents=True, exist_ok=True)
     entries = [
         {
@@ -140,7 +142,7 @@ def list_files(config=Depends(get_config)) -> ApiResponse:
 
 @router.get("/supporters", response_model=ApiResponse)
 def list_supporters(config=Depends(get_config)) -> ApiResponse:
-    supporters_path = (Path(__file__).resolve().parents[3] / "config" / "supporters.json").resolve()
+    supporters_path = (PROJECT_ROOT / "config" / "supporters.json").resolve()
     if not supporters_path.exists():
         return ApiResponse(
             data={
@@ -223,7 +225,7 @@ async def updates_status(config=Depends(get_config)) -> ApiResponse:
 
 @router.get("/logs", response_model=ApiResponse)
 def list_logs(config=Depends(get_config)) -> ApiResponse:
-    logs_dir = (Path(__file__).resolve().parents[3] / config.paths.logs_dir).resolve()
+    logs_dir = (PROJECT_ROOT / config.paths.logs_dir).resolve()
     logs_dir.mkdir(parents=True, exist_ok=True)
     logs = [
         {

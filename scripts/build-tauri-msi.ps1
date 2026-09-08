@@ -3,6 +3,10 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
 
+if (!(Test-Path .\.venv\Scripts\python.exe)) {
+  & .\scripts\install.ps1
+}
+
 if (!(Test-Path .\frontend\node_modules)) {
   Push-Location frontend
   npm install

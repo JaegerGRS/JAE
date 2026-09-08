@@ -5,6 +5,7 @@ from pathlib import Path
 from backend.backup.service import BackupService
 from backend.chat.service import ChatService
 from backend.core.config import AppConfig, ConfigLoader
+from backend.core.paths import get_project_root
 from backend.database.session import build_engine, build_session_factory, get_db, initialize_database
 from backend.hardware.detector import HardwareDetector
 from backend.hardware.tiers import HardwareTierSelector
@@ -13,7 +14,7 @@ from backend.models.manifest import ModelManifestLoader
 from backend.models.download_manager import ModelDownloadManager
 from backend.models.selector import ModelSelector
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+PROJECT_ROOT = get_project_root()
 
 _loader = ConfigLoader(PROJECT_ROOT)
 _config = _loader.load()

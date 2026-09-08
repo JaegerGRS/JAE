@@ -5,10 +5,11 @@ if (!(Test-Path .\.venv\Scripts\python.exe)) {
   exit 1
 }
 
-Start-Process powershell -ArgumentList "-NoExit", "-Command", ".\.venv\Scripts\python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 8000"
 Push-Location frontend
 if (!(Test-Path .\node_modules)) {
   npm install
 }
-npm run tauri:dev
+npm run tauri:build
 Pop-Location
+
+Write-Host "Built native MSI app. Install from frontend/src-tauri/target/release/bundle/msi"

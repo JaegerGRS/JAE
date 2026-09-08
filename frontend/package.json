@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build --bundles msi"
+    "tauri:build": "powershell -ExecutionPolicy Bypass -File ..\\scripts\\build-backend-runtime.ps1 && tauri build --bundles msi"
   },
   "dependencies": {
     "react": "^18.3.1",

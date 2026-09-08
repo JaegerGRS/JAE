@@ -9,11 +9,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.api.dependencies import _config
+from backend.core.paths import get_project_root
 from backend.api.v1.router import router as v1_router
 from backend.core.constants import API_PREFIX
 from backend.core.logging_config import configure_logging
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = get_project_root()
 config = _config
 
 configure_logging(PROJECT_ROOT / config.paths.logs_dir)
@@ -34,6 +35,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "tauri://localhost",
+        "http://tauri.localhost",
     ],
     allow_credentials=True,
     allow_methods=["*"],

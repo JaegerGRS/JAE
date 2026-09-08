@@ -29,6 +29,10 @@
     "active": true,
     "targets": ["msi"],
     "icon": ["icons/icon.ico"],
+    "resources": [
+      "../../build/tauri-resources/backend-runtime",
+      "../../build/tauri-resources/app-template"
+    ],
     "windows": {
       "wix": {
         "language": "en-US"

@@ -53,6 +53,7 @@ Windows desktop app launcher (Tauri):
 Build native MSI installer:
 1. Run scripts/build-tauri-msi.ps1
 2. MSI output: frontend/src-tauri/target/release/bundle/msi/JAE AI_0.0.1_x64_en-US.msi
+3. The MSI bundles the desktop shell, backend runtime, and app configuration needed for a full local install
 
 ## GitHub Release Channel
 - This repository includes CI checks at .github/workflows/ci.yml.
@@ -61,6 +62,12 @@ Build native MSI installer:
 - GitHub is used as the release, sync, and update channel for the desktop app.
 - Live chat, local files, and inference runtime stay inside the Windows app and local machine.
 - GitHub is not used as a live inference server or live search backend.
+
+## Full Desktop App
+- The packaged Tauri application launches as a native Windows app.
+- The MSI build bundles a packaged Python backend runtime for local API services.
+- App runtime data is created in the local application data directory on first launch.
+- Config files are copied into the installed app runtime automatically.
 
 ## Encrypted Sync
 - Run scripts/secure-sync.ps1 to create and push encrypted backup snapshots.
@@ -148,6 +155,7 @@ Do not edit defaults.yaml for machine-specific settings.
 - scripts/restore.ps1
 - scripts/run-desktop.ps1
 - scripts/build-tauri-msi.ps1
+- scripts/build-backend-runtime.ps1
 - scripts/secure-sync.ps1
 - scripts/setup-hourly-sync.ps1
 - scripts/remove-hourly-sync.ps1
