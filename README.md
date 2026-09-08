@@ -24,6 +24,7 @@ Product defaults:
 - Files and project data stay local-only by default.
 - JAE can browse and scan internet sources for information when tool flows are enabled.
 - Selected AI models are open/free to use locally and do not require API keys.
+- Supporters can be shown from Ko-fi-linked GitHub usernames via config/supporters.json.
 
 ## Requirements
 - Windows 10/11
@@ -74,6 +75,11 @@ Build native MSI installer:
 - Auto Updates: Pull Validate Push
 	Reference: scripts/sync-validate-push.ps1
 	Description: Pulls latest code, runs tests/build, then pushes only validated changes.
+
+## Supporters
+- Supporters page reads from config/supporters.json.
+- Add Ko-fi members who linked GitHub by appending their github_username and optional display fields.
+- Public GitHub avatars and profile links are generated automatically from the username.
 
 ## API
 Versioned API prefix:

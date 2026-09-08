@@ -13,6 +13,7 @@ import { NodesPage } from "./pages/NodesPage";
 import { SecurityPage } from "./pages/SecurityPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { SkillsPage } from "./pages/SkillsPage";
+import { SupportersPage } from "./pages/SupportersPage";
 import { SystemPage } from "./pages/SystemPage";
 import { ToolsPage } from "./pages/ToolsPage";
 import { UpdatesPage } from "./pages/UpdatesPage";
@@ -40,6 +41,7 @@ export default function App() {
             <Route path="/logs" element={<LogsPage />} />
             <Route path="/security" element={<SecurityPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/supporters" element={<SupportersPage />} />
           </Routes>
         </div>
       </main>

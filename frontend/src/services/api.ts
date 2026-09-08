@@ -1,4 +1,4 @@
-import type { ApiResponse, ChatMessage, ModelRecommendations, TaskType } from "../types/api";
+import type { ApiResponse, ChatMessage, ModelRecommendations, SupportersResponse, TaskType } from "../types/api";
 
 const configuredApiBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim();
 const API_BASE = (configuredApiBase && configuredApiBase.length > 0 ? configuredApiBase : "http://127.0.0.1:8000/api/v1").replace(/\/+$/, "");
@@ -60,6 +60,11 @@ export async function getAgents() {
 export async function getFiles() {
   const res = await fetch(`${API_BASE}/files`);
   return (await res.json()) as ApiResponse<Record<string, unknown>>;
+}
+
+export async function getSupporters() {
+  const res = await fetch(`${API_BASE}/supporters`);
+  return (await res.json()) as ApiResponse<SupportersResponse>;
 }
 
 export async function getUpdates() {

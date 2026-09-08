@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from fastapi import APIRouter, Depends
@@ -135,6 +136,50 @@ def list_files(config=Depends(get_config)) -> ApiResponse:
         for p in sorted(workspace_dir.iterdir(), key=lambda x: x.name.lower())
     ]
     return ApiResponse(data={"root": workspace_dir.as_posix(), "entries": entries})
+
+
+@router.get("/supporters", response_model=ApiResponse)
+def list_supporters(config=Depends(get_config)) -> ApiResponse:
+    supporters_path = (Path(__file__).resolve().parents[3] / "config" / "supporters.json").resolve()
+    if not supporters_path.exists():
+        return ApiResponse(
+            data={
+                "source": "Ko-fi GitHub Supporters",
+                "support_url": "https://ko-fi.com/Jaethetech",
+                "description": "Public supporter registry is not configured yet.",
+                "members": [],
+            }
+        )
+
+    payload = json.loads(supporters_path.read_text(encoding="utf-8"))
+    raw_members = payload.get("members", [])
+    members = []
+    for item in raw_members:
+        username = str(item.get("github_username", "")).strip()
+        if not username:
+            continue
+        members.append(
+            {
+                "github_username": username,
+                "display_name": item.get("display_name") or username,
+                "tier": item.get("tier") or "Supporter",
+                "note": item.get("note") or "Ko-fi GitHub supporter",
+                "github_url": f"https://github.com/{username}",
+                "avatar_url": f"https://github.com/{username}.png",
+            }
+        )
+
+    return ApiResponse(
+        data={
+            "source": payload.get("source", "Ko-fi GitHub Supporters"),
+            "support_url": payload.get("support_url", "https://ko-fi.com/Jaethetech"),
+            "description": payload.get(
+                "description",
+                "Public supporter registry for Ko-fi members who connected GitHub.",
+            ),
+            "members": members,
+        }
+    )
 
 
 @router.get("/updates", response_model=ApiResponse)

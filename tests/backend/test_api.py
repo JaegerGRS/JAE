@@ -28,6 +28,15 @@ def test_system_endpoint() -> None:
     assert "hardware" in body["data"]
 
 
+def test_supporters_endpoint() -> None:
+    response = client.get("/api/v1/supporters")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["ok"] is True
+    assert body["data"]["source"] == "Ko-fi GitHub Supporters"
+    assert "members" in body["data"]
+
+
 def test_chat_stream_returns_error_event_when_stream_fails() -> None:
     class DummyChatService:
         def create_conversation(self, db, title: str = "New Chat"):

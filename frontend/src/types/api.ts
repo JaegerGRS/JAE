@@ -37,3 +37,19 @@ export type ModelRecommendations = {
   };
   compatible_models: ModelInfo[];
 };
+
+export type SupporterInfo = {
+  github_username: string;
+  display_name?: string;
+  tier?: string;
+  note?: string;
+  github_url: string;
+  avatar_url: string;
+};
+
+export type SupportersResponse = {
+  source: string;
+  support_url: string;
+  description: string;
+  members: SupporterInfo[];
+};
