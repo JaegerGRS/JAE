@@ -7,8 +7,11 @@ if (!(Test-Path $scriptPath)) {
   throw "Missing script: $scriptPath"
 }
 
-$taskCommand = "powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`""
-schtasks.exe /Create /TN $taskName /SC HOURLY /MO 1 /TR $taskCommand /F | Out-Null
+$action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`""
+$trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).Date -RepetitionInterval (New-TimeSpan -Hours 1) -RepetitionDuration (New-TimeSpan -Days 3650)
+$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew
+
+Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -Description "Runs encrypted JAE AI sync snapshot every hour" -Force | Out-Null
 
 Write-Host "Scheduled task registered: $taskName"
 Write-Host "It will run every hour using scripts/secure-sync.ps1"

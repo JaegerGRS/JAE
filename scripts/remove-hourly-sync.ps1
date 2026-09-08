@@ -2,9 +2,8 @@ $ErrorActionPreference = "Stop"
 
 $taskName = "JAE-AI-Encrypted-Sync-Hourly"
 
-schtasks.exe /Query /TN $taskName > $null 2>&1
-if ($LASTEXITCODE -eq 0) {
-  schtasks.exe /Delete /TN $taskName /F | Out-Null
+if (Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue) {
+  Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
   Write-Host "Scheduled task removed: $taskName"
 } else {
   Write-Host "Scheduled task not found: $taskName"
