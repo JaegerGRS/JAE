@@ -54,6 +54,9 @@ export function SettingsPage() {
                   onChange={(e) => updateSettings({ showAdvancedNavigation: e.target.checked })}
                 />
               </label>
+              <p className="muted" style={{ margin: "0 0 10px" }}>
+                Advanced sections in the sidebar are only controlled from this Settings page.
+              </p>
               <label className="settings-line">
                 <span>Show Model Picker On Chat</span>
                 <input
@@ -98,6 +101,38 @@ export function SettingsPage() {
               {localModels.length === 0 && (
                 <p className="muted">No local models installed yet. Install models first to pin a default.</p>
               )}
+            </article>
+
+            <article className="settings-card">
+              <h4>Assistant Capabilities</h4>
+              <label className="settings-line">
+                <span>Keep Files Local-Only</span>
+                <input
+                  type="checkbox"
+                  checked={uiSettings.filesLocalOnly}
+                  onChange={(e) => updateSettings({ filesLocalOnly: e.target.checked })}
+                />
+              </label>
+              <label className="settings-line">
+                <span>Allow Internet Browse and Scan</span>
+                <input
+                  type="checkbox"
+                  checked={uiSettings.internetResearchEnabled}
+                  onChange={(e) => updateSettings({ internetResearchEnabled: e.target.checked })}
+                />
+              </label>
+              <label className="settings-line">
+                <span>Open Free Models (No API Keys)</span>
+                <input
+                  type="checkbox"
+                  checked={true}
+                  onChange={() => undefined}
+                  disabled
+                />
+              </label>
+              <p className="muted" style={{ margin: 0 }}>
+                Free model mode is always kept on for this local-first setup.
+              </p>
             </article>
 
             <article className="settings-card">

@@ -9,6 +9,9 @@ export type UiSettings = {
   showChatModelPicker: boolean;
   defaultTaskType: TaskType;
   preferredModelId: string;
+  filesLocalOnly: boolean;
+  internetResearchEnabled: boolean;
+  freeModelAccess: boolean;
 };
 
 const DEFAULT_UI_SETTINGS: UiSettings = {
@@ -16,6 +19,9 @@ const DEFAULT_UI_SETTINGS: UiSettings = {
   showChatModelPicker: false,
   defaultTaskType: "GENERAL",
   preferredModelId: "auto",
+  filesLocalOnly: true,
+  internetResearchEnabled: true,
+  freeModelAccess: true,
 };
 
 function readStoredSettings(): UiSettings {
@@ -28,6 +34,7 @@ function readStoredSettings(): UiSettings {
     return {
       ...DEFAULT_UI_SETTINGS,
       ...parsed,
+      freeModelAccess: true,
     };
   } catch {
     return DEFAULT_UI_SETTINGS;
@@ -66,7 +73,7 @@ export function useUiSettings() {
 
   const updateSettings = useCallback((patch: Partial<UiSettings>) => {
     const current = readStoredSettings();
-    const next = { ...current, ...patch };
+    const next = { ...current, ...patch, freeModelAccess: true };
     writeStoredSettings(next);
     setSettings(next);
   }, []);

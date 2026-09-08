@@ -38,7 +38,7 @@ const advancedSections = [
 ];
 
 export function Sidebar() {
-  const { settings, updateSettings } = useUiSettings();
+  const { settings } = useUiSettings();
 
   return (
     <aside className="sidebar">
@@ -64,12 +64,7 @@ export function Sidebar() {
         ))}
 
         <div className="nav-section">
-          <button
-            className="nav-toggle"
-            onClick={() => updateSettings({ showAdvancedNavigation: !settings.showAdvancedNavigation })}
-          >
-            {settings.showAdvancedNavigation ? "Hide Advanced" : "Show Advanced"}
-          </button>
+          <p className="nav-section-title">Advanced navigation is managed in Settings</p>
         </div>
 
         {settings.showAdvancedNavigation &&

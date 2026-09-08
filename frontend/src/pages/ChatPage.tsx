@@ -119,6 +119,21 @@ export function ChatPage() {
     }
   }
 
+  const capabilityNotes: string[] = [];
+  if (settings.filesLocalOnly) {
+    capabilityNotes.push("Files stay local-only");
+  } else {
+    capabilityNotes.push("File access mode is not limited to local-only");
+  }
+  if (settings.internetResearchEnabled) {
+    capabilityNotes.push("JAE can browse and scan the internet for information");
+  } else {
+    capabilityNotes.push("Internet browsing and scanning is currently disabled");
+  }
+  if (settings.freeModelAccess) {
+    capabilityNotes.push("Selected AI models are open and free to use with no API keys required");
+  }
+
   return (
     <section className="page chat-page">
       <div className="panel chat-log" ref={logRef}>
@@ -177,7 +192,7 @@ export function ChatPage() {
           {streaming ? "Streaming..." : "Send"}
         </button>
         <p className="muted chat-hint" style={{ margin: 0 }}>
-          Files stay local-only. JAE can browse and scan the internet for information. The selected AI stays open and free to use with no API keys required.
+          {capabilityNotes.join(". ") + "."}
         </p>
       </form>
     </section>
