@@ -1,4 +1,4 @@
-import type { ApiResponse, ChatMessage, ModelRecommendations, StorageMoveResult, StorageStatus, SupportersResponse, TaskType } from "../types/api";
+import type { ApiResponse, ChatMessage, ModelRecommendations, StorageStatus, SupportersResponse, TaskType } from "../types/api";
 
 const configuredApiBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim();
 const API_BASE = (configuredApiBase && configuredApiBase.length > 0 ? configuredApiBase : "http://127.0.0.1:8000/api/v1").replace(/\/+$/, "");
@@ -62,27 +62,33 @@ export async function getFiles() {
   return (await res.json()) as ApiResponse<Record<string, unknown>>;
 }
 
+export async function getSupporters() {
+  const res = await fetch(`${API_BASE}/supporters`);
+  return (await res.json()) as ApiResponse<SupportersResponse>;
+}
+
 export async function getStorageStatus() {
   const res = await fetch(`${API_BASE}/storage`);
   return (await res.json()) as ApiResponse<StorageStatus>;
 }
 
-export async function moveStorage(targetMode: "portable" | "native", driveRoot?: string) {
-  const res = await fetch(`${API_BASE}/storage/move`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ target_mode: targetMode, drive_root: driveRoot ?? null }),
-  });
-  if (!res.ok) {
-    const message = await getErrorMessage(res, `Storage move failed: ${res.status}`);
-    throw new Error(message);
-  }
-  return (await res.json()) as ApiResponse<StorageMoveResult>;
+export async function useAutoStorage() {
+  const res = await fetch(`${API_BASE}/storage/auto`, { method: "POST" });
+  return (await res.json()) as ApiResponse<StorageStatus>;
 }
 
-export async function getSupporters() {
-  const res = await fetch(`${API_BASE}/supporters`);
-  return (await res.json()) as ApiResponse<SupportersResponse>;
+export async function useLocalStorage() {
+  const res = await fetch(`${API_BASE}/storage/local`, { method: "POST" });
+  return (await res.json()) as ApiResponse<StorageStatus>;
+}
+
+export async function usePortableStorage(drivePath: string) {
+  const res = await fetch(`${API_BASE}/storage/portable`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ drive_path: drivePath }),
+  });
+  return (await res.json()) as ApiResponse<StorageStatus>;
 }
 
 export async function getUpdates() {

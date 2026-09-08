@@ -1,1 +1,1 @@
-"""Portable and local storage support for JAE."""
+"""Portable storage services for JAE."""

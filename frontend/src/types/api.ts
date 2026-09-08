@@ -54,29 +54,22 @@ export type SupportersResponse = {
   members: SupporterInfo[];
 };
 
-export type StorageDriveInfo = {
-  drive_root: string;
+export type PortableStorageCandidate = {
+  drive: string;
   portable_root: string;
-  device: string;
-  removable: boolean;
-  marker_present: boolean;
+  free_gb: number;
+  has_portable_data: boolean;
+  is_active: boolean;
 };
 
 export type StorageStatus = {
-  current_root: string;
-  current_mode: string;
+  mode: string;
+  auto_detect_usb: boolean;
+  local_root: string;
+  active_root: string;
+  active_storage: string;
+  next_launch_root: string;
   database_path: string;
-  portable_drives: StorageDriveInfo[];
-  native_root: string;
-  portable_container: string;
+  portable_candidates: PortableStorageCandidate[];
   restart_required: boolean;
-  performance_hint: string;
-};
-
-export type StorageMoveResult = {
-  target_root: string;
-  target_mode: string;
-  database_path: string;
-  restart_required: boolean;
-  message: string;
 };

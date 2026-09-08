@@ -13,25 +13,28 @@ from backend.inference.factory import InferenceProviderFactory
 from backend.models.manifest import ModelManifestLoader
 from backend.models.download_manager import ModelDownloadManager
 from backend.models.selector import ModelSelector
+from backend.storage.service import StorageService
 
 PROJECT_ROOT = get_project_root()
 
 _loader = ConfigLoader(PROJECT_ROOT)
 _config = _loader.load()
+_storage_service = StorageService(PROJECT_ROOT, _config)
+RUNTIME_ROOT = _storage_service.get_active_root()
 
-_engine = build_engine(PROJECT_ROOT / _config.paths.data_dir / "jae_ai.sqlite3")
+_engine = build_engine(RUNTIME_ROOT / _config.paths.data_dir / "jae_ai.sqlite3")
 _session_factory = build_session_factory(_engine)
 initialize_database(_engine)
 
 _hardware_detector = HardwareDetector()
-_tier_selector = HardwareTierSelector(PROJECT_ROOT / "config" / "hardware-tiers.yaml")
-_manifest_loader = ModelManifestLoader(PROJECT_ROOT / "config" / "models.yaml")
+_tier_selector = HardwareTierSelector(RUNTIME_ROOT / "config" / "hardware-tiers.yaml")
+_manifest_loader = ModelManifestLoader(RUNTIME_ROOT / "config" / "models.yaml")
 _model_selector = ModelSelector()
 _provider = InferenceProviderFactory.build(_config)
 _chat_service = ChatService(_provider)
-_backup_service = BackupService(PROJECT_ROOT, _config)
+_backup_service = BackupService(RUNTIME_ROOT, _config)
 _download_manager = ModelDownloadManager(
-    PROJECT_ROOT / _config.paths.models_dir,
+    RUNTIME_ROOT / _config.paths.models_dir,
     _manifest_loader.load(),
     max_concurrent_downloads=_config.downloads.max_concurrent_downloads,
 )
@@ -67,6 +70,10 @@ def get_provider():
 
 def get_backup_service() -> BackupService:
     return _backup_service
+
+
+def get_storage_service() -> StorageService:
+    return _storage_service
 
 
 def get_download_manager() -> ModelDownloadManager:

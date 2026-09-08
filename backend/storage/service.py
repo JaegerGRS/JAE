@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import ctypes
 import json
-import os
 import shutil
+import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -11,138 +11,193 @@ import psutil
 
 from backend.core.config import AppConfig
 
-PORTABLE_CONTAINER = "JAE-Portable"
-PORTABLE_MARKER = "jae-portable.json"
-DRIVE_REMOVABLE = 2
-
 
 class StorageService:
     def __init__(self, project_root: Path, config: AppConfig) -> None:
-        self.project_root = project_root.resolve()
+        self.project_root = project_root
         self.config = config
+        self.local_root = project_root
+        self.storage_config_path = project_root / "config" / "storage.json"
+        self.portable_folder_name = "JAE-Portable"
+        self.marker_filename = "jae-portable.json"
+        self._startup_root = self._resolve_root_from_state(self._read_state())
+
+    def get_active_root(self) -> Path:
+        return self._startup_root
 
     def get_status(self) -> dict[str, object]:
-        current_mode = self._detect_mode(self.project_root)
+        state = self._read_state()
+        current_root = self.get_active_root()
+        next_root = self._resolve_root_from_state(state)
         return {
-            "current_root": self.project_root.as_posix(),
-            "current_mode": current_mode,
-            "database_path": (self.project_root / self.config.paths.data_dir / "jae_ai.sqlite3").as_posix(),
-            "portable_drives": self._discover_portable_drives(),
-            "native_root": self.native_runtime_root().as_posix(),
-            "portable_container": PORTABLE_CONTAINER,
-            "restart_required": True,
-            "performance_hint": "Native drive is fastest. USB portable mode prioritizes mobility.",
+            "mode": state["mode"],
+            "auto_detect_usb": state["auto_detect_usb"],
+            "local_root": str(self.local_root),
+            "active_root": str(current_root),
+            "active_storage": "portable" if current_root != self.local_root else "local",
+            "next_launch_root": str(next_root),
+            "database_path": str(current_root / self.config.paths.data_dir / "jae_ai.sqlite3"),
+            "portable_candidates": self.list_portable_candidates(),
+            "restart_required": current_root != next_root,
         }
 
-    def move_storage(self, target_mode: str, drive_root: str | None = None) -> dict[str, object]:
-        if target_mode not in {"portable", "native"}:
-            raise ValueError("target_mode must be 'portable' or 'native'")
+    def use_auto_detect(self) -> dict[str, object]:
+        state = self._read_state()
+        state["mode"] = "auto"
+        self._write_state(state)
+        return self.get_status()
 
-        if target_mode == "portable":
-            if not drive_root:
-                raise ValueError("drive_root is required for portable mode")
-            target_root = self.portable_runtime_root(Path(drive_root))
-        else:
-            target_root = self.native_runtime_root()
+    def move_to_local(self) -> dict[str, object]:
+        source_root = self.get_active_root()
+        if source_root != self.local_root:
+            self._copy_runtime(source_root, self.local_root)
+        state = self._read_state()
+        state["mode"] = "local"
+        state["portable_root"] = ""
+        self._write_state(state)
+        return self.get_status()
 
-        target_root = target_root.resolve()
-        target_root.mkdir(parents=True, exist_ok=True)
-        self._copy_runtime_tree(self.project_root, target_root)
+    def move_to_portable(self, drive_path: str) -> dict[str, object]:
+        portable_root = self._portable_root_from_drive(drive_path)
+        portable_root.mkdir(parents=True, exist_ok=True)
+        self._copy_runtime(self.get_active_root(), portable_root)
+        self._write_marker(portable_root)
+        state = self._read_state()
+        state["mode"] = "portable"
+        state["portable_root"] = str(portable_root)
+        self._write_state(state)
+        return self.get_status()
 
-        if target_mode == "portable":
-            self._write_marker(target_root)
-        else:
-            self._remove_marker(target_root)
-            if self.is_portable_root(self.project_root):
-                self._remove_marker(self.project_root)
-
-        return {
-            "target_root": target_root.as_posix(),
-            "target_mode": target_mode,
-            "database_path": (target_root / self.config.paths.data_dir / "jae_ai.sqlite3").as_posix(),
-            "restart_required": True,
-            "message": "Storage moved. Restart JAE to reopen chats from the new location.",
-        }
-
-    def native_runtime_root(self) -> Path:
-        local_app_data = os.getenv("LOCALAPPDATA", "").strip()
-        if local_app_data:
-            return (Path(local_app_data) / "JAE" / "runtime").resolve()
-        return (self.project_root / "portable-runtime-fallback").resolve()
-
-    def portable_runtime_root(self, drive_root: Path) -> Path:
-        return (drive_root / PORTABLE_CONTAINER / "runtime").resolve()
-
-    def is_portable_root(self, root: Path) -> bool:
-        return (root / PORTABLE_MARKER).exists()
-
-    def _detect_mode(self, root: Path) -> str:
-        if self.is_portable_root(root):
-            return "portable"
-        if root == self.native_runtime_root():
-            return "native"
-        return "workspace"
-
-    def _copy_runtime_tree(self, source_root: Path, target_root: Path) -> None:
-        paths_to_copy = [
-            source_root / "config",
-            source_root / self.config.paths.data_dir,
-            source_root / self.config.backup.backups_dir,
-        ]
-
-        for source in paths_to_copy:
-            if not source.exists():
-                continue
-            destination = target_root / source.relative_to(source_root)
-            if source.is_dir():
-                shutil.copytree(source, destination, dirs_exist_ok=True)
-            else:
-                destination.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(source, destination)
-
-    def _write_marker(self, runtime_root: Path) -> None:
-        payload = {
-            "name": "JAE Portable Runtime",
-            "updated_at": datetime.now(timezone.utc).isoformat(),
-            "root": runtime_root.as_posix(),
-        }
-        (runtime_root / PORTABLE_MARKER).write_text(json.dumps(payload, indent=2), encoding="utf-8")
-
-    def _remove_marker(self, runtime_root: Path) -> None:
-        marker = runtime_root / PORTABLE_MARKER
-        if marker.exists():
-            marker.unlink()
-
-    def _discover_portable_drives(self) -> list[dict[str, object]]:
-        drives: list[dict[str, object]] = []
-        seen: set[str] = set()
+    def list_portable_candidates(self) -> list[dict[str, object]]:
+        candidates: list[dict[str, object]] = []
+        active_root = getattr(self, "_startup_root", self.local_root)
         for partition in psutil.disk_partitions(all=False):
-            mountpoint = Path(partition.mountpoint)
-            mount_key = mountpoint.as_posix().lower()
-            if mount_key in seen or not mountpoint.exists():
+            mountpoint = partition.mountpoint
+            drive_path = Path(mountpoint)
+            removable = self._is_removable_drive(drive_path, partition.opts)
+            if not removable:
                 continue
-            seen.add(mount_key)
-
-            drive_type = self._get_drive_type(str(mountpoint))
-            portable_root = self.portable_runtime_root(mountpoint)
-            marker_present = (portable_root / PORTABLE_MARKER).exists()
-            is_removable = drive_type == DRIVE_REMOVABLE
-            if not is_removable and not marker_present:
-                continue
-
-            drives.append(
+            portable_root = self._portable_root_from_drive(mountpoint)
+            marker_path = portable_root / self.marker_filename
+            try:
+                usage = psutil.disk_usage(mountpoint)
+                free_gb = round(usage.free / (1024 ** 3), 2)
+            except Exception:
+                free_gb = 0.0
+            candidates.append(
                 {
-                    "drive_root": mountpoint.as_posix(),
-                    "portable_root": portable_root.as_posix(),
-                    "device": partition.device,
-                    "removable": is_removable,
-                    "marker_present": marker_present,
+                    "drive": mountpoint,
+                    "portable_root": str(portable_root),
+                    "free_gb": free_gb,
+                    "has_portable_data": marker_path.exists(),
+                    "is_active": active_root == portable_root,
                 }
             )
-        return drives
+        return candidates
 
-    def _get_drive_type(self, drive_path: str) -> int:
+    def _copy_runtime(self, source_root: Path, target_root: Path) -> None:
+        self._copy_config(source_root, target_root)
+        self._copy_database(source_root, target_root)
+        self._copy_optional_tree(source_root / self.config.paths.workspace_dir, target_root / self.config.paths.workspace_dir)
+        self._copy_optional_tree(source_root / self.config.backup.backups_dir, target_root / self.config.backup.backups_dir)
+
+    def _copy_config(self, source_root: Path, target_root: Path) -> None:
+        source_config = source_root / "config"
+        target_config = target_root / "config"
+        if source_config.exists():
+            if target_config.exists():
+                shutil.rmtree(target_config)
+            shutil.copytree(source_config, target_config)
+
+    def _copy_database(self, source_root: Path, target_root: Path) -> None:
+        source_db = source_root / self.config.paths.data_dir / "jae_ai.sqlite3"
+        target_db = target_root / self.config.paths.data_dir / "jae_ai.sqlite3"
+        target_db.parent.mkdir(parents=True, exist_ok=True)
+        if not source_db.exists():
+            return
+        if target_db.exists():
+            target_db.unlink()
+        source_conn = sqlite3.connect(source_db)
         try:
-            return int(ctypes.windll.kernel32.GetDriveTypeW(f"{drive_path}\\"))
+            target_conn = sqlite3.connect(target_db)
+            try:
+                source_conn.backup(target_conn)
+            finally:
+                target_conn.close()
+        finally:
+            source_conn.close()
+
+    def _copy_optional_tree(self, source: Path, target: Path) -> None:
+        if not source.exists():
+            return
+        if target.exists():
+            shutil.rmtree(target)
+        shutil.copytree(source, target)
+
+    def _portable_root_from_drive(self, drive_path: str | Path) -> Path:
+        return Path(drive_path) / self.portable_folder_name
+
+    def _marker_path(self, root: Path) -> Path:
+        return root / self.marker_filename
+
+    def _write_marker(self, root: Path) -> None:
+        payload = {
+            "app_name": self.config.app_name,
+            "portable_root": str(root),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        self._marker_path(root).write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+    def _read_state(self) -> dict[str, object]:
+        default_state: dict[str, object] = {
+            "mode": "auto",
+            "portable_root": "",
+            "auto_detect_usb": True,
+        }
+        if not self.storage_config_path.exists():
+            return default_state
+        try:
+            payload = json.loads(self.storage_config_path.read_text(encoding="utf-8"))
+            if not isinstance(payload, dict):
+                return default_state
+            return {
+                **default_state,
+                **payload,
+            }
         except Exception:
-            return 0
+            return default_state
+
+    def _write_state(self, state: dict[str, object]) -> None:
+        self.storage_config_path.parent.mkdir(parents=True, exist_ok=True)
+        self.storage_config_path.write_text(json.dumps(state, indent=2), encoding="utf-8")
+
+    def _resolve_root_from_state(self, state: dict[str, object]) -> Path:
+        mode = str(state.get("mode", "auto"))
+        portable_root_raw = str(state.get("portable_root", "")).strip()
+        portable_root = Path(portable_root_raw) if portable_root_raw else None
+        if mode == "local":
+            return self.local_root
+        if mode == "portable" and portable_root and self._marker_path(portable_root).exists():
+            return portable_root
+        detected = self._detect_portable_root()
+        if mode in {"portable", "auto"} and detected is not None:
+            return detected
+        return self.local_root
+
+    def _detect_portable_root(self) -> Path | None:
+        for candidate in self.list_portable_candidates():
+            if candidate["has_portable_data"]:
+                return Path(str(candidate["portable_root"]))
+        return None
+
+    def _is_removable_drive(self, drive_path: Path, opts: str) -> bool:
+        lowered = opts.lower()
+        if "removable" in lowered:
+            return True
+        if drive_path.drive:
+            try:
+                drive_type = ctypes.windll.kernel32.GetDriveTypeW(f"{drive_path.drive}\\")
+                return drive_type == 2
+            except Exception:
+                return False
+        return False

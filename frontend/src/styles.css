@@ -320,12 +320,14 @@ a {
 .storage-actions {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
   margin: 12px 0;
 }
 
 .storage-drive-list {
   display: grid;
   gap: 10px;
+  margin: 12px 0;
 }
 
 .storage-drive-card {
@@ -333,14 +335,10 @@ a {
   justify-content: space-between;
   gap: 12px;
   align-items: center;
-  border: 1px solid #2f2f2f;
+  border: 1px solid var(--line);
   border-radius: 12px;
   padding: 12px;
   background: rgba(255, 255, 255, 0.03);
-}
-
-.storage-drive-card p {
-  margin: 4px 0 0;
 }
 
 .settings-card h4 {
@@ -717,8 +715,8 @@ tbody tr:hover {
   }
 
   .storage-drive-card {
-    flex-direction: column;
     align-items: flex-start;
+    flex-direction: column;
   }
 
   .topbar {

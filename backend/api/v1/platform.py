@@ -3,24 +3,22 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from backend.api.dependencies import get_config, get_database_session, get_hardware_detector
+from backend.api.dependencies import get_config, get_database_session, get_hardware_detector, get_storage_service
 from backend.core.paths import get_project_root
 from backend.core.schemas import ApiResponse
 from backend.database.models import Conversation, MemoryEntry
-from backend.storage.service import StorageService
 
 router = APIRouter(tags=["platform"])
 PROJECT_ROOT = get_project_root()
 
 
-class StorageMoveRequest(BaseModel):
-    target_mode: str
-    drive_root: str | None = None
+class PortableStorageRequest(BaseModel):
+    drive_path: str
 
 
 @router.get("/version", response_model=ApiResponse)
@@ -148,19 +146,26 @@ def list_files(config=Depends(get_config)) -> ApiResponse:
 
 
 @router.get("/storage", response_model=ApiResponse)
-def get_storage_status(config=Depends(get_config)) -> ApiResponse:
-    storage = StorageService(PROJECT_ROOT, config)
-    return ApiResponse(data=storage.get_status())
+def storage_status(storage_service=Depends(get_storage_service)) -> ApiResponse:
+    return ApiResponse(data=storage_service.get_status())
 
 
-@router.post("/storage/move", response_model=ApiResponse)
-def move_storage(request: StorageMoveRequest, config=Depends(get_config)) -> ApiResponse:
-    storage = StorageService(PROJECT_ROOT, config)
-    try:
-        result = storage.move_storage(request.target_mode, request.drive_root)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    return ApiResponse(data=result)
+@router.post("/storage/auto", response_model=ApiResponse)
+def use_auto_storage(storage_service=Depends(get_storage_service)) -> ApiResponse:
+    return ApiResponse(data=storage_service.use_auto_detect(), message="USB auto-detect will be used on next launch.")
+
+
+@router.post("/storage/local", response_model=ApiResponse)
+def use_local_storage(storage_service=Depends(get_storage_service)) -> ApiResponse:
+    return ApiResponse(data=storage_service.move_to_local(), message="Chats copied to the device drive. Restart to finish switching.")
+
+
+@router.post("/storage/portable", response_model=ApiResponse)
+def use_portable_storage(request: PortableStorageRequest, storage_service=Depends(get_storage_service)) -> ApiResponse:
+    return ApiResponse(
+        data=storage_service.move_to_portable(request.drive_path),
+        message="Chats copied to portable USB storage. Restart to finish switching.",
+    )
 
 
 @router.get("/supporters", response_model=ApiResponse)

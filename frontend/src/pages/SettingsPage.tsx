@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { LoadingSkeleton } from "../components/LoadingSkeleton";
 import { useUiSettings } from "../lib/uiSettings";
-import { getModels, getModelStatus, getSettings, getStorageStatus, moveStorage } from "../services/api";
+import { getModels, getModelStatus, getSettings, getStorageStatus, useAutoStorage, useLocalStorage, usePortableStorage } from "../services/api";
 import type { ModelInfo, StorageStatus, TaskType } from "../types/api";
 
 export function SettingsPage() {
@@ -10,9 +10,9 @@ export function SettingsPage() {
   const [settings, setSettings] = useState<Record<string, unknown>>({});
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [localModelIds, setLocalModelIds] = useState<string[]>([]);
-  const [storage, setStorage] = useState<StorageStatus | null>(null);
+  const [storageStatus, setStorageStatus] = useState<StorageStatus | null>(null);
+  const [storageBusy, setStorageBusy] = useState(false);
   const [storageMessage, setStorageMessage] = useState("");
-  const [movingStorage, setMovingStorage] = useState(false);
 
   useEffect(() => {
     Promise.all([getSettings(), getModels(), getModelStatus(), getStorageStatus()])
@@ -23,30 +23,29 @@ export function SettingsPage() {
           .filter((m) => m.exists)
           .map((m) => m.id);
         setLocalModelIds(local);
-        setStorage(storageRes.data);
+        setStorageStatus(storageRes.data);
       })
       .catch(() => {
         setSettings({});
         setModels([]);
         setLocalModelIds([]);
-        setStorage(null);
+        setStorageStatus(null);
       })
       .finally(() => setLoading(false));
   }, []);
 
   const localModels = models.filter((m) => localModelIds.includes(m.id));
 
-  async function handleMoveStorage(targetMode: "portable" | "native", driveRoot?: string) {
+  async function runStorageAction(action: () => Promise<{ data: StorageStatus; message: string }>) {
     try {
-      setMovingStorage(true);
-      const result = await moveStorage(targetMode, driveRoot);
-      setStorageMessage(result.data.message);
-      const refreshed = await getStorageStatus();
-      setStorage(refreshed.data);
+      setStorageBusy(true);
+      const res = await action();
+      setStorageStatus(res.data);
+      setStorageMessage(res.message || "Storage updated.");
     } catch (error) {
-      setStorageMessage(error instanceof Error ? error.message : "Storage move failed.");
+      setStorageMessage(error instanceof Error ? error.message : "Storage update failed.");
     } finally {
-      setMovingStorage(false);
+      setStorageBusy(false);
     }
   }
 
@@ -215,43 +214,52 @@ export function SettingsPage() {
             </article>
 
             <article className="settings-card settings-card-wide">
-              <h4>Chat Storage</h4>
-              <p className="muted">
-                JAE can auto-detect a portable USB chat vault or move chats back to this device for faster native drive speeds.
-              </p>
-              <p>Current Mode: {storage?.current_mode || "unknown"}</p>
-              <p>Current Root: {storage?.current_root || "-"}</p>
-              <p>Database: {storage?.database_path || "-"}</p>
-              <p>Native Root: {storage?.native_root || "-"}</p>
-              <p className="muted">{storage?.performance_hint || "Native drive is fastest. USB keeps chats portable."}</p>
-              <div className="storage-actions">
-                <button type="button" onClick={() => handleMoveStorage("native")} disabled={movingStorage}>
-                  Move Chats To This Device
-                </button>
-              </div>
-              <div className="storage-drive-list">
-                {(storage?.portable_drives || []).length === 0 ? (
-                  <p className="muted">No portable JAE USB drive detected yet. Insert a USB drive, then move chats to it.</p>
-                ) : (
-                  storage?.portable_drives.map((drive) => (
-                    <div key={drive.drive_root} className="storage-drive-card">
-                      <div>
-                        <strong>{drive.drive_root}</strong>
-                        <p className="muted">Portable Root: {drive.portable_root}</p>
-                        <p className="muted">{drive.marker_present ? "Portable vault detected" : "Removable drive ready for JAE portable chats"}</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleMoveStorage("portable", drive.drive_root)}
-                        disabled={movingStorage}
-                      >
-                        Move Chats To USB
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
-              {storageMessage ? <p className="muted settings-help">{storageMessage}</p> : null}
+              <h4>Portable Chat Storage</h4>
+              {storageStatus ? (
+                <>
+                  <p>Active Storage: {storageStatus.active_storage}</p>
+                  <p>Current Root: {storageStatus.active_root}</p>
+                  <p>Next Launch Root: {storageStatus.next_launch_root}</p>
+                  <p>Database: {storageStatus.database_path}</p>
+                  <div className="storage-actions">
+                    <button onClick={() => void runStorageAction(() => useAutoStorage())} disabled={storageBusy}>
+                      Use USB Auto-Detect
+                    </button>
+                    <button onClick={() => void runStorageAction(() => useLocalStorage())} disabled={storageBusy}>
+                      Move Chats To This Device
+                    </button>
+                  </div>
+                  <div className="storage-drive-list">
+                    {storageStatus.portable_candidates.length === 0 ? (
+                      <p className="muted">Insert a removable USB drive to make chats portable between Windows devices.</p>
+                    ) : (
+                      storageStatus.portable_candidates.map((candidate) => (
+                        <div key={candidate.portable_root} className="storage-drive-card">
+                          <div>
+                            <strong>{candidate.drive}</strong>
+                            <p className="muted" style={{ margin: "4px 0 0" }}>
+                              Portable root: {candidate.portable_root} | Free: {candidate.free_gb} GB
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => void runStorageAction(() => usePortableStorage(candidate.drive))}
+                            disabled={storageBusy}
+                          >
+                            {candidate.has_portable_data ? "Use This USB" : "Move Chats To This USB"}
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  <p className="muted settings-help">
+                    Auto-detect lets JAE open portable chats from USB on other Windows devices. Moving chats back to this device uses the native drive for faster local access.
+                  </p>
+                  {storageStatus.restart_required && <p className="muted">Restart the app after switching storage so JAE opens the new chat location.</p>}
+                  {storageMessage && <p className="muted">{storageMessage}</p>}
+                </>
+              ) : (
+                <p className="muted">Portable storage status is unavailable right now.</p>
+              )}
             </article>
           </div>
         )}
