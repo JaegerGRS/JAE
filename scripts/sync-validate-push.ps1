@@ -13,6 +13,18 @@ if (!(Test-Path $git)) {
 
 Set-Location $repoRoot
 
+if (!(Test-Path ".\.venv\Scripts\python.exe")) {
+  Write-Host "[bootstrap] Python venv missing. Running scripts/install.ps1..."
+  & .\scripts\install.ps1
+}
+
+if (!(Test-Path ".\frontend\node_modules")) {
+  Write-Host "[bootstrap] Frontend dependencies missing. Installing npm packages..."
+  Push-Location frontend
+  npm install
+  Pop-Location
+}
+
 Write-Host "[1/6] Pulling latest from origin/main..."
 & $git pull --rebase --autostash origin main
 

@@ -17,6 +17,13 @@ JAE (Jaeger Adaptive Engine) is a private local-first AI desktop app built with 
 1. Run `scripts/install.ps1`
 2. Run `scripts/run-desktop.ps1`
 
+## Hard Purge Workspace
+Run `scripts/clean-workspace.ps1` to remove local generated artifacts and runtime leftovers:
+- removes local virtual env and node modules
+- removes build output and cache folders
+- removes local backup snapshot files
+- purges local `data/` contents while preserving `data/.gitkeep`
+
 ## Development
 1. Run `scripts/dev.ps1`
 2. Use the Tauri desktop window for development
@@ -35,6 +42,7 @@ Use for validated updates:
 `scripts/sync-validate-push.ps1 -CommitMessage "feat: app update"`
 
 ## Script Set (Kept)
+- `scripts/clean-workspace.ps1`
 - `scripts/install.ps1`
 - `scripts/dev.ps1`
 - `scripts/run-desktop.ps1`
