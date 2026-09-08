@@ -1,0 +1,33 @@
+app_name: JAE AI
+environment: development
+debug: false
+version: 0.2.2
+node_id: JAE-MAIN
+bind_localhost_only: true
+
+server:
+  host: 127.0.0.1
+  port: 8000
+  allow_lan: false
+
+inference:
+  provider: llamacpp
+  openai_base_url: http://127.0.0.1:8080/v1
+  api_key: null
+  request_timeout_seconds: 120
+
+paths:
+  data_dir: data
+  models_dir: data/models
+  logs_dir: data/logs
+  workspace_dir: data/workspace
+
+backup:
+  enabled: true
+  backups_dir: backups
+  key_file: data/keys/backup.key
+  signing_key_file: data/keys/backup-signing.key
+  export_dir: data/exports/backups
+
+downloads:
+  max_concurrent_downloads: 1

@@ -1,0 +1,24 @@
+$ErrorActionPreference = "SilentlyContinue"
+
+$patterns = @(
+	"backend.main:app",
+	"uvicorn",
+	"vite",
+	"npm run dev",
+	"npm run preview"
+)
+
+Get-CimInstance Win32_Process |
+	Where-Object {
+		$cmd = $_.CommandLine
+		if (-not $cmd) { return $false }
+		foreach ($p in $patterns) {
+			if ($cmd -like "*$p*") { return $true }
+		}
+		return $false
+	} |
+	ForEach-Object {
+		Stop-Process -Id $_.ProcessId -Force
+	}
+
+Write-Host "Stopped JAE AI backend/frontend processes (best effort)."

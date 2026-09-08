@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.coverage
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Local config and secrets
+.env
+config/device.local.yaml
+config/user.local.yaml
+
+# Runtime data
+data/*
+!data/.gitkeep
+!data/workspace/
+backups/*
+!backups/.gitkeep
+
+# Logs and caches
+*.log
+.cache/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

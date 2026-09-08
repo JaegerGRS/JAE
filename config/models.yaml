@@ -1,0 +1,133 @@
+models:
+  - id: tinyllama-1.1b-chat-v1.0-q4_k_m
+    name: TinyLlama 1.1B Chat Q4_K_M
+    description: Ultra-light chat model for lower VRAM devices and fast local responses.
+    source: HuggingFace
+    download_url: https://huggingface.co/example/tinyllama-1.1b-chat-v1.0-gguf/resolve/main/tinyllama-1.1b-chat-v1.0-q4_k_m.gguf
+    filename: tinyllama-1.1b-chat-v1.0-q4_k_m.gguf
+    sha256: REPLACE_WITH_REAL_SHA256
+    architecture: llama
+    parameter_count: 1.1b
+    quantization: Q4_K_M
+    required_ram_gb: 4
+    recommended_ram_gb: 8
+    required_vram_gb: 2
+    recommended_vram_gb: 4
+    context_limit: 2048
+    capabilities: [chat, summarization, extraction]
+    backend_compatibility: [llamacpp]
+    priority: 8
+
+  - id: phi-3.5-mini-instruct-q4_k_m
+    name: Phi-3.5 Mini Instruct Q4_K_M
+    description: Balanced instruction-following model for general assistant use.
+    source: HuggingFace
+    download_url: https://huggingface.co/example/phi-3.5-mini-instruct-gguf/resolve/main/phi-3.5-mini-instruct-q4_k_m.gguf
+    filename: phi-3.5-mini-instruct-q4_k_m.gguf
+    sha256: REPLACE_WITH_REAL_SHA256
+    architecture: phi
+    parameter_count: 3.8b
+    quantization: Q4_K_M
+    required_ram_gb: 8
+    recommended_ram_gb: 16
+    required_vram_gb: 4
+    recommended_vram_gb: 6
+    context_limit: 8192
+    capabilities: [chat, reasoning, coding, summarization, extraction]
+    backend_compatibility: [llamacpp]
+    priority: 9
+
+  - id: qwen2.5-3b-instruct-q4_k_m
+    name: Qwen2.5 3B Instruct Q4_K_M
+    description: Small general-purpose local model suitable for 16GB RAM machines.
+    source: HuggingFace
+    download_url: https://huggingface.co/example/qwen2.5-3b-instruct-gguf/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf
+    filename: qwen2.5-3b-instruct-q4_k_m.gguf
+    sha256: REPLACE_WITH_REAL_SHA256
+    architecture: qwen2
+    parameter_count: 3b
+    quantization: Q4_K_M
+    required_ram_gb: 8
+    recommended_ram_gb: 16
+    required_vram_gb: 4
+    recommended_vram_gb: 6
+    context_limit: 4096
+    capabilities: [chat, reasoning, coding, summarization, extraction]
+    backend_compatibility: [llamacpp]
+    priority: 10
+
+  - id: mistral-7b-instruct-v0.3-q4_k_m
+    name: Mistral 7B Instruct v0.3 Q4_K_M
+    description: Strong all-around 7B model for higher quality local chat and reasoning.
+    source: HuggingFace
+    download_url: https://huggingface.co/example/mistral-7b-instruct-v0.3-gguf/resolve/main/mistral-7b-instruct-v0.3-q4_k_m.gguf
+    filename: mistral-7b-instruct-v0.3-q4_k_m.gguf
+    sha256: REPLACE_WITH_REAL_SHA256
+    architecture: mistral
+    parameter_count: 7b
+    quantization: Q4_K_M
+    required_ram_gb: 12
+    recommended_ram_gb: 20
+    required_vram_gb: 6
+    recommended_vram_gb: 8
+    context_limit: 8192
+    capabilities: [chat, reasoning, coding, summarization, extraction, tool_calling]
+    backend_compatibility: [llamacpp]
+    priority: 14
+
+  - id: qwen2.5-coder-3b-q4_k_m
+    name: Qwen2.5 Coder 3B Q4_K_M
+    description: Coding-focused model for constrained hardware.
+    source: HuggingFace
+    download_url: https://huggingface.co/example/qwen2.5-coder-3b-gguf/resolve/main/qwen2.5-coder-3b-q4_k_m.gguf
+    filename: qwen2.5-coder-3b-q4_k_m.gguf
+    sha256: REPLACE_WITH_REAL_SHA256
+    architecture: qwen2
+    parameter_count: 3b
+    quantization: Q4_K_M
+    required_ram_gb: 8
+    recommended_ram_gb: 16
+    required_vram_gb: 4
+    recommended_vram_gb: 6
+    context_limit: 4096
+    capabilities: [chat, coding, extraction]
+    backend_compatibility: [llamacpp]
+    priority: 20
+
+  - id: deepseek-coder-6.7b-instruct-q4_k_m
+    name: DeepSeek Coder 6.7B Instruct Q4_K_M
+    description: Heavier coding model for stronger code synthesis and refactor quality.
+    source: HuggingFace
+    download_url: https://huggingface.co/example/deepseek-coder-6.7b-instruct-gguf/resolve/main/deepseek-coder-6.7b-instruct-q4_k_m.gguf
+    filename: deepseek-coder-6.7b-instruct-q4_k_m.gguf
+    sha256: REPLACE_WITH_REAL_SHA256
+    architecture: deepseek
+    parameter_count: 6.7b
+    quantization: Q4_K_M
+    required_ram_gb: 12
+    recommended_ram_gb: 20
+    required_vram_gb: 6
+    recommended_vram_gb: 8
+    context_limit: 8192
+    capabilities: [chat, coding, reasoning, extraction]
+    backend_compatibility: [llamacpp]
+    priority: 24
+
+  - id: nomic-embed-text-v1.5-q8_0
+    name: Nomic Embed Text v1.5 Q8_0
+    description: Local embedding model for future RAG.
+    source: HuggingFace
+    download_url: https://huggingface.co/example/nomic-embed-text-gguf/resolve/main/nomic-embed-text-v1.5-q8_0.gguf
+    filename: nomic-embed-text-v1.5-q8_0.gguf
+    sha256: REPLACE_WITH_REAL_SHA256
+    architecture: bert
+    parameter_count: 0.1b
+    quantization: Q8_0
+    required_ram_gb: 4
+    recommended_ram_gb: 8
+    required_vram_gb: 0
+    recommended_vram_gb: 2
+    context_limit: 2048
+    capabilities: [embeddings]
+    backend_compatibility: [llamacpp]
+    priority: 50

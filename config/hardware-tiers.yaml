@@ -1,0 +1,28 @@
+tiers:
+  - name: LEGACY
+    min_ram_gb: 0
+    min_vram_gb: 0
+    max_context: 4096
+    max_concurrent_requests: 1
+    preferred_model_classes: ["2b", "3b", "4b"]
+
+  - name: STANDARD
+    min_ram_gb: 32
+    min_vram_gb: 8
+    max_context: 8192
+    max_concurrent_requests: 2
+    preferred_model_classes: ["7b", "8b", "9b"]
+
+  - name: HIGH
+    min_ram_gb: 64
+    min_vram_gb: 12
+    max_context: 16384
+    max_concurrent_requests: 3
+    preferred_model_classes: ["14b", "20b"]
+
+  - name: ULTRA
+    min_ram_gb: 96
+    min_vram_gb: 16
+    max_context: 32768
+    max_concurrent_requests: 4
+    preferred_model_classes: ["14b", "32b", "70b"]
