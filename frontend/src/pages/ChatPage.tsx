@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { useUiSettings } from "../lib/uiSettings";
 
 type UiMessage = ChatMessage & { id: string };
+type VoiceMode = "wake" | "direct" | null;
 
 export function ChatPage() {
   const [conversationId, setConversationId] = useState<number | undefined>(undefined);
@@ -16,8 +17,130 @@ export function ChatPage() {
   const [selectedModelId, setSelectedModelId] = useState<string>("auto");
   const [chatReady, setChatReady] = useState(false);
   const [readinessMessage, setReadinessMessage] = useState("Checking local AI runtime...");
+  const [voiceSupported, setVoiceSupported] = useState(false);
+  const [voiceListening, setVoiceListening] = useState(false);
+  const [voiceStatus, setVoiceStatus] = useState("Voice ready when enabled.");
   const logRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const voiceModeRef = useRef<VoiceMode>(null);
+  const shouldResumeWakeRef = useRef(false);
   const { settings } = useUiSettings();
+
+  function getSpeechRecognitionCtor(): SpeechRecognitionConstructor | null {
+    if (typeof window === "undefined") {
+      return null;
+    }
+    return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+  }
+
+  function stopVoiceListening(manual = true) {
+    shouldResumeWakeRef.current = false;
+    if (manual) {
+      voiceModeRef.current = null;
+    }
+    const recognition = recognitionRef.current;
+    if (recognition) {
+      recognition.stop();
+      recognitionRef.current = null;
+    }
+    setVoiceListening(false);
+  }
+
+  function startVoiceListening(mode: Exclude<VoiceMode, null>) {
+    const SpeechRecognitionCtor = getSpeechRecognitionCtor();
+    if (!SpeechRecognitionCtor || !settings.voiceEnabled) {
+      setVoiceStatus("Voice input is unavailable on this device.");
+      return;
+    }
+
+    const existing = recognitionRef.current;
+    if (existing) {
+      shouldResumeWakeRef.current = false;
+      existing.stop();
+    }
+
+    const recognition = new SpeechRecognitionCtor();
+    recognition.lang = "en-US";
+    recognition.interimResults = mode === "direct";
+    recognition.continuous = mode === "wake";
+    voiceModeRef.current = mode;
+    shouldResumeWakeRef.current = mode === "wake";
+
+    recognition.onstart = () => {
+      setVoiceListening(true);
+      setVoiceStatus(mode === "wake" ? 'Listening for “Hi Jae”…' : "Listening for your voice...");
+    };
+
+    recognition.onresult = (event) => {
+      let interimText = "";
+      for (let index = event.resultIndex; index < event.results.length; index += 1) {
+        const result = event.results[index];
+        const transcript = result[0]?.transcript?.trim();
+        if (!transcript) {
+          continue;
+        }
+
+        if (mode === "wake") {
+          const match = transcript.toLowerCase().match(/\bhi\s+jae\b[\s,:-]*(.*)/i);
+          if (result.isFinal && match) {
+            const afterWake = match[1]?.trim() || "";
+            setVoiceStatus("Wake phrase heard. Speak now.");
+            stopVoiceListening(false);
+            voiceModeRef.current = null;
+            if (afterWake) {
+              setInput((prev) => `${prev}${prev ? " " : ""}${afterWake}`.trim());
+            }
+            window.setTimeout(() => startVoiceListening("direct"), 120);
+            return;
+          }
+          continue;
+        }
+
+        if (result.isFinal) {
+          setInput((prev) => `${prev}${prev ? " " : ""}${transcript}`.trim());
+          setVoiceStatus("Voice captured. You can keep speaking or send the message.");
+        } else {
+          interimText = transcript;
+        }
+      }
+
+      if (interimText) {
+        setVoiceStatus(`Listening: ${interimText}`);
+      }
+    };
+
+    recognition.onerror = () => {
+      setVoiceStatus("Voice input hit an issue. Try the button again.");
+      setVoiceListening(false);
+      recognitionRef.current = null;
+    };
+
+    recognition.onend = () => {
+      const shouldResumeWake = shouldResumeWakeRef.current && settings.voiceEnabled && settings.voiceWakePhraseEnabled && chatReady;
+      setVoiceListening(false);
+      recognitionRef.current = null;
+      if (shouldResumeWake) {
+        window.setTimeout(() => startVoiceListening("wake"), 250);
+        return;
+      }
+      if (voiceModeRef.current === "direct") {
+        setVoiceStatus("Voice stopped. Review your message or tap the mic again.");
+      } else if (settings.voiceEnabled && settings.voiceWakePhraseEnabled && chatReady) {
+        setVoiceStatus('Wake phrase listening is armed for “Hi Jae”.');
+      } else {
+        setVoiceStatus("Voice is off.");
+      }
+      voiceModeRef.current = null;
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+  }
+
+  useEffect(() => {
+    setVoiceSupported(Boolean(getSpeechRecognitionCtor()));
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -78,6 +201,37 @@ export function ChatPage() {
     }
     log.scrollTop = log.scrollHeight;
   }, [messages, streaming]);
+
+  useEffect(() => {
+    if (!voiceSupported) {
+      setVoiceStatus("Voice input is unavailable on this device.");
+      return;
+    }
+
+    if (!settings.voiceEnabled) {
+      stopVoiceListening();
+      setVoiceStatus("Voice is turned off in Settings.");
+      return;
+    }
+
+    if (!chatReady || streaming) {
+      stopVoiceListening(false);
+      setVoiceStatus(chatReady ? "Voice waits until streaming is finished." : readinessMessage);
+      return;
+    }
+
+    if (settings.voiceWakePhraseEnabled && voiceModeRef.current !== "wake" && !voiceListening) {
+      startVoiceListening("wake");
+      return;
+    }
+
+    if (!settings.voiceWakePhraseEnabled && voiceModeRef.current === "wake") {
+      stopVoiceListening();
+      setVoiceStatus("Wake phrase listening is off.");
+    }
+  }, [chatReady, readinessMessage, settings.voiceEnabled, settings.voiceWakePhraseEnabled, streaming, voiceListening, voiceSupported]);
+
+  useEffect(() => () => stopVoiceListening(), []);
 
   async function ensureConversation(): Promise<number> {
     if (conversationId) {
@@ -174,6 +328,19 @@ export function ChatPage() {
     }
   }
 
+  function onVoiceButtonClick() {
+    if (!voiceSupported || !settings.voiceEnabled || !chatReady) {
+      return;
+    }
+    inputRef.current?.focus();
+    if (voiceModeRef.current === "direct") {
+      stopVoiceListening();
+      setVoiceStatus("Voice dictation stopped.");
+      return;
+    }
+    startVoiceListening("direct");
+  }
+
   const capabilityNotes: string[] = [];
   if (settings.filesLocalOnly) {
     capabilityNotes.push("Files stay local-only");
@@ -237,6 +404,7 @@ export function ChatPage() {
         )}
         <textarea
           className="chat-input"
+          ref={inputRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={onInputKeyDown}
@@ -244,9 +412,22 @@ export function ChatPage() {
           rows={3}
           disabled={!chatReady || streaming}
         />
-        <button className="chat-send" type="submit" disabled={!chatReady || streaming}>
-          {streaming ? "Streaming..." : "Send"}
-        </button>
+        <div className="chat-actions">
+          <button
+            className={`voice-button${voiceModeRef.current === "direct" ? " voice-button-live" : ""}`}
+            type="button"
+            onClick={onVoiceButtonClick}
+            disabled={!voiceSupported || !settings.voiceEnabled || !chatReady || streaming}
+          >
+            {voiceModeRef.current === "direct" ? "Stop Voice" : "Voice"}
+          </button>
+          <button className="chat-send" type="submit" disabled={!chatReady || streaming}>
+            {streaming ? "Streaming..." : "Send"}
+          </button>
+        </div>
+        <p className="muted chat-hint voice-status" style={{ margin: 0 }}>
+          {voiceStatus}
+        </p>
         <p className="muted chat-hint" style={{ margin: 0 }}>
           {capabilityNotes.join(". ") + "."}
         </p>

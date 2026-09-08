@@ -534,9 +534,30 @@ a {
   grid-column: 1 / 2;
 }
 
-.chat-send {
+.chat-actions {
   grid-column: 2 / 3;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.chat-send,
+.voice-button {
   min-width: 112px;
+  min-height: 42px;
+}
+
+.voice-button {
+  background: linear-gradient(135deg, #20262b, #1a1e22);
+}
+
+.voice-button-live {
+  background: linear-gradient(135deg, #345049, #253733);
+  border-color: rgba(215, 239, 232, 0.45);
+}
+
+.voice-status {
+  letter-spacing: 0.01em;
 }
 
 select {
@@ -659,7 +680,9 @@ tbody tr:hover {
   }
 
   .chat-input,
-  .chat-send {
+  .chat-actions,
+  .chat-send,
+  .voice-button {
     grid-column: 1 / -1;
   }
 

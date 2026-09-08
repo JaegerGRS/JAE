@@ -95,6 +95,30 @@ export function SettingsPage() {
             </article>
 
             <article className="settings-card">
+              <h4>Voice</h4>
+              <label className="settings-line">
+                <span>Enable Voice Input</span>
+                <input
+                  type="checkbox"
+                  checked={uiSettings.voiceEnabled}
+                  onChange={(e) => updateSettings({ voiceEnabled: e.target.checked })}
+                />
+              </label>
+              <label className="settings-line">
+                <span>Wake Phrase: “Hi Jae”</span>
+                <input
+                  type="checkbox"
+                  checked={uiSettings.voiceWakePhraseEnabled}
+                  onChange={(e) => updateSettings({ voiceWakePhraseEnabled: e.target.checked })}
+                  disabled={!uiSettings.voiceEnabled}
+                />
+              </label>
+              <p className="muted" style={{ margin: 0 }}>
+                People can use the voice button any time, or say “Hi Jae” to start dictation when wake phrase listening is on.
+              </p>
+            </article>
+
+            <article className="settings-card">
               <h4>Chat Defaults</h4>
               <label className="settings-line settings-line-stack">
                 <span>Default Task Type</span>

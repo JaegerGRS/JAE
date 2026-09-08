@@ -14,6 +14,8 @@ export type UiSettings = {
   freeModelAccess: boolean;
   themeMode: "dark" | "light";
   customCss: string;
+  voiceEnabled: boolean;
+  voiceWakePhraseEnabled: boolean;
 };
 
 const DEFAULT_UI_SETTINGS: UiSettings = {
@@ -26,6 +28,8 @@ const DEFAULT_UI_SETTINGS: UiSettings = {
   freeModelAccess: true,
   themeMode: "dark",
   customCss: "",
+  voiceEnabled: true,
+  voiceWakePhraseEnabled: true,
 };
 
 function readStoredSettings(): UiSettings {
