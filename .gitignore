@@ -16,6 +16,7 @@ env/
 # Node
 frontend/node_modules/
 frontend/dist/
+desktop/node_modules/
 
 # Local config and secrets
 .env

@@ -31,8 +31,13 @@ Milestone 1 foundation is implemented, plus initial Milestone 2 capabilities:
 2. Run scripts/dev.ps1
 3. Open frontend URL printed by Vite (default http://127.0.0.1:5173)
 
+Windows desktop app launcher:
+1. Run scripts/run-desktop.ps1
+
 ## GitHub Website
 - This repository includes a GitHub Pages workflow at .github/workflows/deploy-pages.yml.
+- This repository includes CI checks at .github/workflows/ci.yml.
+- This repository includes an hourly health check at .github/workflows/hourly-health-check.yml.
 - On push to main, the frontend is built and deployed to GitHub Pages.
 - Base path is automatic:
 	- If repo name ends with .github.io, deploy base is /
@@ -47,6 +52,12 @@ If site is not showing the built app:
 1. In GitHub repository Settings > Pages, set Source to GitHub Actions.
 2. If using branch deployment instead, set Source to Deploy from a branch and choose gh-pages / root.
 3. Re-run the latest workflow in Actions.
+
+## Encrypted Sync
+- Run scripts/secure-sync.ps1 to create and push encrypted backup snapshots.
+- Encrypted snapshots are stored in vault/snapshots and can be restored later.
+- Backup encryption keys are local or environment-based and are never committed.
+- Important: source code in git remains visible to users with repository access; encrypted sync protects runtime/user data snapshots.
 
 ## API
 Versioned API prefix:
@@ -108,6 +119,8 @@ Do not edit defaults.yaml for machine-specific settings.
 - scripts/diagnose.ps1
 - scripts/update.ps1
 - scripts/restore.ps1
+- scripts/run-desktop.ps1
+- scripts/secure-sync.ps1
 
 ## Troubleshooting
 - If frontend cannot call API, verify backend is running on 127.0.0.1:8000.
