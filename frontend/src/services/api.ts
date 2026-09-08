@@ -1,6 +1,7 @@
 import type { ApiResponse, ChatMessage, ModelRecommendations, TaskType } from "../types/api";
 
-const API_BASE = "http://127.0.0.1:8000/api/v1";
+const configuredApiBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim();
+const API_BASE = (configuredApiBase && configuredApiBase.length > 0 ? configuredApiBase : "http://127.0.0.1:8000/api/v1").replace(/\/+$/, "");
 
 export async function getHealth() {
   const res = await fetch(`${API_BASE}/health`);

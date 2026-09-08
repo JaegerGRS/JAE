@@ -46,7 +46,7 @@ class AppConfig(BaseModel):
     app_name: str = APP_NAME
     environment: str = "development"
     debug: bool = False
-    version: str = "0.2.1"
+    version: str = "0.0.1"
     node_id: str = "JAE-MAIN"
     bind_localhost_only: bool = True
     server: ServerConfig = Field(default_factory=ServerConfig)

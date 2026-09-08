@@ -3,6 +3,9 @@
 JAE AI is a local-first, privacy-first, modular AI assistant platform designed for Windows and scalable to stronger hardware and multi-node private deployments.
 
 ## Current Status
+Current pinned version policy:
+- Version remains at 0.0.1 until explicitly changed.
+
 Milestone 1 foundation is implemented, plus initial Milestone 2 capabilities:
 - FastAPI backend
 - React + TypeScript frontend
@@ -27,6 +30,13 @@ Milestone 1 foundation is implemented, plus initial Milestone 2 capabilities:
 1. Run scripts/install.ps1
 2. Run scripts/dev.ps1
 3. Open frontend URL printed by Vite (default http://127.0.0.1:5173)
+
+## GitHub Website
+- This repository includes a GitHub Pages workflow at .github/workflows/deploy-pages.yml.
+- On push to main, the frontend is built and deployed to GitHub Pages.
+- For repository pages, Vite base path is set automatically to /<repo-name>/ during workflow builds.
+- Frontend API URL can be configured with repository variable VITE_API_BASE_URL.
+- If VITE_API_BASE_URL is not set, frontend defaults to local backend: http://127.0.0.1:8000/api/v1.
 
 ## API
 Versioned API prefix:
