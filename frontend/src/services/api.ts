@@ -3,6 +3,15 @@ import type { ApiResponse, ChatMessage, ModelRecommendations, TaskType } from ".
 const configuredApiBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim();
 const API_BASE = (configuredApiBase && configuredApiBase.length > 0 ? configuredApiBase : "http://127.0.0.1:8000/api/v1").replace(/\/+$/, "");
 
+async function getErrorMessage(res: Response, fallback: string): Promise<string> {
+  try {
+    const payload = (await res.json()) as { detail?: string; error?: string; message?: string };
+    return payload.detail || payload.error || payload.message || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export async function getHealth() {
   const res = await fetch(`${API_BASE}/health`);
   return (await res.json()) as ApiResponse<Record<string, unknown>>;
@@ -169,7 +178,24 @@ export async function exportBackup(backupName: string, destinationSubdir?: strin
 
 export async function createConversation() {
   const res = await fetch(`${API_BASE}/chat/create`, { method: "POST" });
+  if (!res.ok) {
+    const message = await getErrorMessage(res, `Conversation start failed: ${res.status}`);
+    throw new Error(message);
+  }
   return (await res.json()) as ApiResponse<{ conversation_id: number }>;
+}
+
+export async function chatOnce(payload: { conversation_id?: number; messages: ChatMessage[]; task_type?: string; model_id?: string }) {
+  const res = await fetch(`${API_BASE}/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const message = await getErrorMessage(res, `Chat request failed: ${res.status}`);
+    throw new Error(message);
+  }
+  return (await res.json()) as ApiResponse<{ conversation_id: number; model_id: string; response: string }>;
 }
 
 export function streamChat(
@@ -180,14 +206,26 @@ export function streamChat(
     onError: (error: string) => void;
   }
 ) {
+  const controller = new AbortController();
+  const timeoutMs = 30000;
+  let timeoutHandle = window.setTimeout(() => controller.abort(), timeoutMs);
+
+  const resetTimeout = () => {
+    window.clearTimeout(timeoutHandle);
+    timeoutHandle = window.setTimeout(() => controller.abort(), timeoutMs);
+  };
+
   fetch(`${API_BASE}/chat/stream`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    signal: controller.signal,
     body: JSON.stringify(payload),
   })
     .then(async (res) => {
       if (!res.ok || !res.body) {
-        handlers.onError(`Streaming failed: ${res.status}`);
+        window.clearTimeout(timeoutHandle);
+        const message = await getErrorMessage(res, `Streaming failed: ${res.status}`);
+        handlers.onError(message);
         return;
       }
       const reader = res.body.getReader();
@@ -200,6 +238,7 @@ export function streamChat(
         if (done) {
           break;
         }
+        resetTimeout();
         buffer += decoder.decode(value, { stream: true });
         const events = buffer.split("\n\n");
         buffer = events.pop() ?? "";
@@ -218,10 +257,12 @@ export function streamChat(
           if (eventName === "done") {
             const parsed = JSON.parse(data) as { conversation_id: number; model_id: string };
             doneReceived = true;
+            window.clearTimeout(timeoutHandle);
             handlers.onDone(parsed);
           }
           if (eventName === "error") {
             const parsed = JSON.parse(data) as { error?: string };
+            window.clearTimeout(timeoutHandle);
             handlers.onError(parsed.error || "Streaming failed");
             return;
           }
@@ -229,8 +270,16 @@ export function streamChat(
       }
 
       if (!doneReceived) {
+        window.clearTimeout(timeoutHandle);
         handlers.onError("Stream ended unexpectedly");
       }
     })
-    .catch((err: Error) => handlers.onError(err.message));
+    .catch((err: Error) => {
+      window.clearTimeout(timeoutHandle);
+      if (err.name === "AbortError") {
+        handlers.onError("Stream timed out");
+        return;
+      }
+      handlers.onError(err.message);
+    });
 }

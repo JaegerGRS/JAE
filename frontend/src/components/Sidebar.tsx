@@ -30,7 +30,7 @@ const advancedSections = [
       { to: "/skills", label: "Skills" },
       { to: "/agents", label: "Agents" },
       { to: "/backup", label: "Backup" },
-      { to: "/updates", label: "Updates" },
+      { to: "/updates", label: "Auto Updates" },
       { to: "/logs", label: "Logs" },
       { to: "/security", label: "Security" },
     ],

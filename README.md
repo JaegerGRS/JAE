@@ -41,13 +41,18 @@ Auto sync and publish workflow:
 2. Optional: pass a custom commit message, for example:
 	scripts/sync-validate-push.ps1 -CommitMessage "feat: ui polish and fixes"
 
-Windows desktop app launcher:
+Windows desktop app launcher (Tauri):
 1. Run scripts/run-desktop.ps1
+
+Build native MSI installer:
+1. Run scripts/build-tauri-msi.ps1
+2. MSI output: frontend/src-tauri/target/release/bundle/msi/JAE AI_0.0.1_x64_en-US.msi
 
 ## GitHub Website
 - This repository includes a GitHub Pages workflow at .github/workflows/deploy-pages.yml.
 - This repository includes CI checks at .github/workflows/ci.yml.
-- This repository includes an hourly health check at .github/workflows/hourly-health-check.yml.
+- This repository includes an hourly auto update health check at .github/workflows/hourly-health-check.yml.
+- This repository includes a Windows Tauri MSI build workflow at .github/workflows/build-tauri-msi.yml.
 - On push to main, the frontend is built and deployed to GitHub Pages.
 - Base path is automatic:
 	- If repo name ends with .github.io, deploy base is /
@@ -70,6 +75,17 @@ If site is not showing the built app:
 - Encrypted snapshots are stored in vault/snapshots and can be restored later.
 - Backup encryption keys are local or environment-based and are never committed.
 - Important: source code in git remains visible to users with repository access; encrypted sync protects runtime/user data snapshots.
+
+## Auto Updates
+- Auto Updates: Hourly Health Check
+	Reference: .github/workflows/hourly-health-check.yml
+	Description: Runs every hour to verify backend tests and frontend build health.
+- Auto Updates: Encrypted Local Sync
+	Reference: scripts/setup-hourly-sync.ps1
+	Description: Registers an hourly Windows scheduled task for encrypted runtime snapshots.
+- Auto Updates: Pull Validate Push
+	Reference: scripts/sync-validate-push.ps1
+	Description: Pulls latest code, runs tests/build, then pushes only validated changes.
 
 ## API
 Versioned API prefix:
@@ -132,6 +148,7 @@ Do not edit defaults.yaml for machine-specific settings.
 - scripts/update.ps1
 - scripts/restore.ps1
 - scripts/run-desktop.ps1
+- scripts/build-tauri-msi.ps1
 - scripts/secure-sync.ps1
 - scripts/setup-hourly-sync.ps1
 - scripts/remove-hourly-sync.ps1

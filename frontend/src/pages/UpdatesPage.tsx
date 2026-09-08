@@ -5,7 +5,14 @@ import { getUpdates } from "../services/api";
 type UpdatesData = {
   current_version: string;
   channel: string;
-  policy: string;
+  auto_update_policy: string;
+  auto_update_reference: string;
+  auto_updates?: Array<{
+    name: string;
+    description: string;
+    reference: string;
+    status: string;
+  }>;
   update_available: boolean;
 };
 
@@ -25,7 +32,7 @@ export function UpdatesPage() {
     <section className="page">
       <div className="panel">
         <div className="panel-header">
-          <h3>Updates</h3>
+          <h3>Auto Updates</h3>
           <div className="chip-row">
             <span className="chip">channel {data?.channel || "-"}</span>
           </div>
@@ -39,15 +46,33 @@ export function UpdatesPage() {
               <p className="stat-value">{data.current_version}</p>
             </article>
             <article className="stat-card">
-              <p className="stat-label">Policy</p>
-              <p className="stat-value">{data.policy}</p>
+              <p className="stat-label">Auto Update Policy</p>
+              <p className="stat-value">{data.auto_update_policy}</p>
             </article>
             <article className="stat-card">
-              <p className="stat-label">Availability</p>
+              <p className="stat-label">Update Availability</p>
               <p className="stat-value">{data.update_available ? "Update Ready" : "Up to Date"}</p>
+            </article>
+            <article className="stat-card">
+              <p className="stat-label">Reference</p>
+              <p className="stat-value">{data.auto_update_reference}</p>
             </article>
           </div>
         )}
+        {!loading && !error && data?.auto_updates?.length ? (
+          <div className="panel" style={{ marginTop: "12px" }}>
+            <h3 style={{ marginTop: 0 }}>Auto Update References</h3>
+            <ul className="name-list">
+              {data.auto_updates.map((item) => (
+                <li key={item.name}>
+                  <strong>{item.name}</strong>
+                  <p className="muted" style={{ margin: "6px 0" }}>{item.description}</p>
+                  <p style={{ margin: 0 }}>Reference: {item.reference} | Status: {item.status}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
       </div>
     </section>
   );

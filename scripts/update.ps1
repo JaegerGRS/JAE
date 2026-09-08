@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Stop"
 
-Write-Host "[JAE AI] Pulling latest code..."
+Write-Host "[JAE AI] Auto Updates: pulling latest code..."
 git pull --ff-only
 
 if (Test-Path .\.venv\Scripts\python.exe) {
@@ -13,4 +13,4 @@ if (Test-Path .\frontend\package.json) {
   Pop-Location
 }
 
-Write-Host "[JAE AI] Update complete."
+Write-Host "[JAE AI] Auto Updates complete."

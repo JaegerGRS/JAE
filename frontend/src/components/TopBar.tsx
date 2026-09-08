@@ -13,7 +13,7 @@ const routeTitles: Record<string, string> = {
   "/agents": "Agents",
   "/files": "Files",
   "/backup": "Backup",
-  "/updates": "Updates",
+  "/updates": "Auto Updates",
   "/logs": "Logs",
   "/security": "Security",
   "/settings": "Settings",

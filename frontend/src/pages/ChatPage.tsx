@@ -1,5 +1,5 @@
 import { FormEvent, KeyboardEvent, useRef, useState } from "react";
-import { createConversation, getModels, getModelStatus, streamChat } from "../services/api";
+import { chatOnce, createConversation, getModels, getModelStatus, streamChat } from "../services/api";
 import type { ChatMessage, ModelInfo } from "../types/api";
 import { useEffect } from "react";
 import { useUiSettings } from "../lib/uiSettings";
@@ -91,15 +91,32 @@ export function ChatPage() {
             setConversationId(done.conversation_id);
             setStreaming(false);
           },
-          onError(error) {
-            setMessages((prev) =>
-              prev.map((m) =>
-                m.id === assistantMessageId
-                  ? { ...m, content: `Streaming error: ${error}` }
-                  : m
-              )
-            );
-            setStreaming(false);
+          onError() {
+            chatOnce({
+              conversation_id: cid,
+              messages: payloadMessages,
+              task_type: settings.defaultTaskType,
+              model_id: selectedModelId !== "auto" ? selectedModelId : undefined,
+            })
+              .then((res) => {
+                const reply = res.data.response || "";
+                setMessages((prev) =>
+                  prev.map((m) => (m.id === assistantMessageId ? { ...m, content: reply } : m))
+                );
+                setConversationId(res.data.conversation_id);
+              })
+              .catch((fallbackErr: Error) => {
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === assistantMessageId
+                      ? { ...m, content: `AI runtime is temporarily unavailable. Details: ${fallbackErr.message}` }
+                      : m
+                  )
+                );
+              })
+              .finally(() => {
+                setStreaming(false);
+              });
           },
         }
       );

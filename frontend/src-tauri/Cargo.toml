@@ -1,0 +1,20 @@
+[package]
+name = "jae-ai"
+version = "0.0.1"
+description = "JAE AI desktop shell"
+authors = ["JAE AI"]
+license = "Proprietary"
+repository = "https://github.com/JaegerGRS/Personal-AI"
+edition = "2021"
+rust-version = "1.77"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[features]
+default = []

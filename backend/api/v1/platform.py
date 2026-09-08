@@ -143,7 +143,28 @@ async def updates_status(config=Depends(get_config)) -> ApiResponse:
         data={
             "current_version": config.version,
             "channel": "stable",
-            "policy": "MANUAL",
+            "auto_update_policy": "AUTO_CHECK_HOURLY",
+            "auto_update_reference": "GitHub Actions + local scheduled sync task",
+            "auto_updates": [
+                {
+                    "name": "Auto Updates: Hourly Health Check",
+                    "description": "Runs every hour in GitHub Actions to validate backend tests and frontend build health.",
+                    "reference": ".github/workflows/hourly-health-check.yml",
+                    "status": "ACTIVE",
+                },
+                {
+                    "name": "Auto Updates: Encrypted Local Sync",
+                    "description": "Runs hourly via Windows Task Scheduler and creates encrypted runtime snapshots.",
+                    "reference": "scripts/setup-hourly-sync.ps1",
+                    "status": "ACTIVE",
+                },
+                {
+                    "name": "Auto Updates: Pull Validate Push",
+                    "description": "Pulls latest main, runs tests/build, and pushes only validated updates.",
+                    "reference": "scripts/sync-validate-push.ps1",
+                    "status": "ACTIVE",
+                },
+            ],
             "update_available": False,
         }
     )

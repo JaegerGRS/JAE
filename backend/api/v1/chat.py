@@ -54,7 +54,10 @@ def _resolve_model_id(
             )
         return selected.id
 
-    selection = selector.select(request.task_type, profile, tier, models)
+    try:
+        selection = selector.select(request.task_type, profile, tier, models)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     return selection.selected_model_id
 
 
