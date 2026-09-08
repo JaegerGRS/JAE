@@ -1,1 +1,1 @@
-"""JAE AI backend package."""
+"""JAE backend package."""

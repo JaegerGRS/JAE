@@ -44,8 +44,9 @@ export function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="brand">
-        <h1>JAE AI</h1>
-        <p>Private Local Assistant</p>
+        <div className="brand-mark">JAE</div>
+        <h1>JAE</h1>
+        <p>Jaeger Adaptive Engine</p>
       </div>
       <nav>
         {coreSections.map((section) => (

@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Stop"
 
-$taskName = "JAE-AI-Encrypted-Sync-Hourly"
+$taskName = "JAE-Encrypted-Sync-Hourly"
 
 if (Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue) {
   Unregister-ScheduledTask -TaskName $taskName -Confirm:$false

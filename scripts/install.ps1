@@ -4,14 +4,14 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-Write-Host "[JAE AI] Installing backend dependencies..."
+Write-Host "[JAE] Installing backend dependencies..."
 & $PythonCmd -m venv .venv
 & .\.venv\Scripts\python.exe -m pip install --upgrade pip
 & .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 
-Write-Host "[JAE AI] Installing frontend dependencies..."
+Write-Host "[JAE] Installing frontend dependencies..."
 Push-Location frontend
 npm install
 Pop-Location
 
-Write-Host "[JAE AI] Install complete."
+Write-Host "[JAE] Install complete."

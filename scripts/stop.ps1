@@ -23,4 +23,4 @@ Get-CimInstance Win32_Process |
 		Stop-Process -Id $_.ProcessId -Force
 	}
 
-Write-Host "Stopped JAE AI backend/frontend processes (best effort)."
+Write-Host "Stopped JAE backend/frontend processes (best effort)."

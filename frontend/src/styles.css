@@ -10,6 +10,22 @@
   --accent-2: #ffffff;
   --danger: #d6d6d6;
   --shadow: rgba(0, 0, 0, 0.35);
+  --brand-glow: rgba(255, 255, 255, 0.16);
+}
+
+:root[data-theme="light"] {
+  --bg: #ece9e1;
+  --bg-2: #f7f4ee;
+  --panel: #fffdf8;
+  --panel-2: #f4f0e7;
+  --text: #151515;
+  --muted: #625f59;
+  --line: #d9d1c4;
+  --accent: #111111;
+  --accent-2: #181818;
+  --danger: #4d4d4d;
+  --shadow: rgba(43, 38, 29, 0.18);
+  --brand-glow: rgba(24, 24, 24, 0.08);
 }
 
 @keyframes fade-up {
@@ -47,6 +63,10 @@ body {
   min-height: 100vh;
 }
 
+a {
+  color: inherit;
+}
+
 .app-shell {
   display: grid;
   grid-template-columns: 280px 1fr;
@@ -62,9 +82,22 @@ body {
 }
 
 .brand h1 {
-  margin: 0;
+  margin: 10px 0 0;
   letter-spacing: 0.12em;
   font-weight: 750;
+}
+
+.brand-mark {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: radial-gradient(circle at 30% 30%, var(--brand-glow), transparent 70%), rgba(255, 255, 255, 0.04);
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
 }
 
 .brand p {
@@ -254,6 +287,34 @@ body {
   background: linear-gradient(180deg, rgba(30, 30, 30, 0.9), rgba(16, 16, 16, 0.9));
   padding: 12px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+:root[data-theme="light"] .settings-card,
+:root[data-theme="light"] .stat-card,
+:root[data-theme="light"] .panel,
+:root[data-theme="light"] .supporter-card,
+:root[data-theme="light"] .name-list li,
+:root[data-theme="light"] .nav-note,
+:root[data-theme="light"] .json-view,
+:root[data-theme="light"] .skeleton-row,
+:root[data-theme="light"] .msg.user,
+:root[data-theme="light"] .msg.assistant {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.settings-card-wide {
+  grid-column: span 2;
+}
+
+.settings-css-editor {
+  width: 100%;
+  min-height: 180px;
+  font-family: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  line-height: 1.5;
+}
+
+.settings-help {
+  margin: 0;
 }
 
 .settings-card h4 {
@@ -481,7 +542,7 @@ body {
 select {
   border-radius: 10px;
   border: 1px solid var(--line);
-  background: #0d0d0d;
+  background: var(--panel-2);
   color: var(--text);
   padding: 8px 10px;
 }
@@ -491,7 +552,7 @@ textarea {
   min-height: 68px;
   border-radius: 12px;
   border: 1px solid var(--line);
-  background: #0b0b0b;
+  background: var(--panel-2);
   color: var(--text);
   padding: 10px;
 }
@@ -510,6 +571,41 @@ button {
   color: #f8f8f8;
   padding: 0 16px;
   cursor: pointer;
+}
+
+:root[data-theme="light"] .sidebar {
+  background: linear-gradient(180deg, rgba(252, 249, 242, 0.98), rgba(241, 236, 227, 0.96));
+}
+
+:root[data-theme="light"] .topbar {
+  background: linear-gradient(180deg, rgba(255, 252, 245, 0.96), rgba(243, 238, 228, 0.96));
+}
+
+:root[data-theme="light"] .panel {
+  background: linear-gradient(180deg, rgba(255, 252, 245, 0.96), rgba(245, 239, 229, 0.94));
+}
+
+:root[data-theme="light"] .settings-card,
+:root[data-theme="light"] .stat-card,
+:root[data-theme="light"] .supporter-card {
+  background: linear-gradient(180deg, rgba(255, 253, 248, 0.94), rgba(246, 241, 232, 0.92));
+}
+
+:root[data-theme="light"] .nav-item.active,
+:root[data-theme="light"] .nav-item:hover {
+  background: linear-gradient(90deg, rgba(24, 24, 24, 0.1), rgba(24, 24, 24, 0.04));
+  border-color: rgba(24, 24, 24, 0.18);
+}
+
+:root[data-theme="light"] .chip,
+:root[data-theme="light"] .topbar-pill,
+:root[data-theme="light"] .badge-on,
+:root[data-theme="light"] .badge-dir,
+:root[data-theme="light"] .badge-off,
+:root[data-theme="light"] .badge-file {
+  color: var(--text);
+  background: rgba(20, 20, 20, 0.06);
+  border-color: rgba(20, 20, 20, 0.14);
 }
 
 button:hover:not(:disabled) {
@@ -565,6 +661,10 @@ tbody tr:hover {
   .chat-input,
   .chat-send {
     grid-column: 1 / -1;
+  }
+
+  .settings-card-wide {
+    grid-column: auto;
   }
 
   .topbar {

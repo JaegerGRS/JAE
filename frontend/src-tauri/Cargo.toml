@@ -1,8 +1,8 @@
 [package]
 name = "jae-ai"
 version = "0.0.1"
-description = "JAE AI desktop shell"
-authors = ["JAE AI"]
+description = "JAE desktop shell"
+authors = ["JAE"]
 license = "Proprietary"
 repository = "https://github.com/JaegerGRS/Personal-AI"
 edition = "2021"

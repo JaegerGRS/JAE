@@ -35,7 +35,7 @@ export function TopBar() {
     <header className="topbar">
       <div>
         <h2>{pageTitle}</h2>
-        <p>Local-first runtime with private by default controls</p>
+        <p>Jaeger Adaptive Engine with private-by-default local controls</p>
       </div>
       <div className="topbar-right">
         <div className="topbar-time">{now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>

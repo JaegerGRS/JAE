@@ -67,6 +67,33 @@ export function SettingsPage() {
               </label>
             </article>
 
+            <article className="settings-card settings-card-wide">
+              <h4>Theme Studio</h4>
+              <label className="settings-line settings-line-stack">
+                <span>Theme Mode</span>
+                <select
+                  value={uiSettings.themeMode}
+                  onChange={(e) => updateSettings({ themeMode: e.target.value as "dark" | "light" })}
+                >
+                  <option value="dark">Dark Default</option>
+                  <option value="light">Light</option>
+                </select>
+              </label>
+              <label className="settings-line settings-line-stack">
+                <span>Custom CSS</span>
+                <textarea
+                  className="settings-css-editor"
+                  value={uiSettings.customCss}
+                  onChange={(e) => updateSettings({ customCss: e.target.value })}
+                  rows={8}
+                  placeholder={":root {\n  --accent: #d7efe8;\n  --line: #3a3a3a;\n}\n\n.topbar {\n  border-radius: 24px;\n}"}
+                />
+              </label>
+              <p className="muted settings-help">
+                Dark stays the default. Light mode and custom CSS are optional overrides for people who want a different look.
+              </p>
+            </article>
+
             <article className="settings-card">
               <h4>Chat Defaults</h4>
               <label className="settings-line settings-line-stack">
@@ -137,7 +164,7 @@ export function SettingsPage() {
 
             <article className="settings-card">
               <h4>Runtime</h4>
-              <p>App: {String(settings.app_name || "JAE AI")}</p>
+              <p>App: {String(settings.app_name || "JAE")}</p>
               <p>Environment: {String(settings.environment || "development")}</p>
               <p>Inference Provider: {String(settings.inference_provider || "llamacpp")}</p>
               <p>OpenAI Base URL: {String(settings.openai_base_url || "-")}</p>

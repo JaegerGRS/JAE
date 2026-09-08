@@ -240,7 +240,7 @@ export function ChatPage() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={onInputKeyDown}
-          placeholder={chatReady ? "Ask JAE AI anything..." : readinessMessage}
+          placeholder={chatReady ? "Ask JAE anything..." : readinessMessage}
           rows={3}
           disabled={!chatReady || streaming}
         />

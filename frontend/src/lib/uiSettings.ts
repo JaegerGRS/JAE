@@ -12,6 +12,8 @@ export type UiSettings = {
   filesLocalOnly: boolean;
   internetResearchEnabled: boolean;
   freeModelAccess: boolean;
+  themeMode: "dark" | "light";
+  customCss: string;
 };
 
 const DEFAULT_UI_SETTINGS: UiSettings = {
@@ -22,6 +24,8 @@ const DEFAULT_UI_SETTINGS: UiSettings = {
   filesLocalOnly: true,
   internetResearchEnabled: true,
   freeModelAccess: true,
+  themeMode: "dark",
+  customCss: "",
 };
 
 function readStoredSettings(): UiSettings {

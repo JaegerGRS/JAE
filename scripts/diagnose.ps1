@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Continue"
 
-Write-Host "=== JAE AI Diagnostics ==="
+Write-Host "=== JAE Diagnostics ==="
 Write-Host "Date: $(Get-Date)"
 Write-Host "Host: $env:COMPUTERNAME"
 Write-Host "OS: $((Get-CimInstance Win32_OperatingSystem).Caption)"

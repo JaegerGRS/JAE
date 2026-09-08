@@ -1,6 +1,6 @@
-# JAE AI
+# JAE
 
-JAE AI is a local-first, privacy-first, modular AI assistant platform designed for Windows and scalable to stronger hardware and multi-node private deployments.
+JAE, short for Jaeger Adaptive Engine, is a local-first, privacy-first, modular AI assistant platform designed for Windows and scalable to stronger hardware and multi-node private deployments.
 
 ## Current Status
 Current pinned version policy:
@@ -35,7 +35,7 @@ Product defaults:
 ## Quick Start
 1. Run scripts/install.ps1
 2. Run scripts/run-desktop.ps1
-3. Use JAE AI as a native Windows desktop app
+3. Use JAE as a native Windows desktop app
 
 Development app only:
 1. Run scripts/dev.ps1
@@ -52,7 +52,7 @@ Windows desktop app launcher (Tauri):
 
 Build native MSI installer:
 1. Run scripts/build-tauri-msi.ps1
-2. MSI output: frontend/src-tauri/target/release/bundle/msi/JAE AI_0.0.1_x64_en-US.msi
+2. MSI output: frontend/src-tauri/target/release/bundle/msi/JAE_0.0.1_x64_en-US.msi
 3. The MSI bundles the desktop shell, backend runtime, and app configuration needed for a full local install
 
 ## GitHub Release Channel

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Route, Routes } from "react-router-dom";
 import { AgentsPage } from "./pages/AgentsPage";
 import { Sidebar } from "./components/Sidebar";
@@ -17,8 +18,24 @@ import { SupportersPage } from "./pages/SupportersPage";
 import { SystemPage } from "./pages/SystemPage";
 import { ToolsPage } from "./pages/ToolsPage";
 import { UpdatesPage } from "./pages/UpdatesPage";
+import { useUiSettings } from "./lib/uiSettings";
 
 export default function App() {
+  const { settings } = useUiSettings();
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = settings.themeMode;
+
+    const styleId = "jae-custom-css";
+    let styleTag = document.getElementById(styleId) as HTMLStyleElement | null;
+    if (!styleTag) {
+      styleTag = document.createElement("style");
+      styleTag.id = styleId;
+      document.head.appendChild(styleTag);
+    }
+    styleTag.textContent = settings.customCss;
+  }, [settings.themeMode, settings.customCss]);
+
   return (
     <div className="app-shell">
       <Sidebar />
