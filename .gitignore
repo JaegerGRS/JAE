@@ -38,6 +38,7 @@ build/tauri-resources/backend-runtime/jae-ai-backend/
 build/tauri-resources/app-template/config/
 build/tauri-resources/app-template/data/
 build/tauri-resources/app-template/backups/
+build/tauri-resources/app-template/VERSION
 !build/tauri-resources/backend-runtime/.gitkeep
 !build/tauri-resources/app-template/.gitkeep
 
