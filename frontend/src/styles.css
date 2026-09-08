@@ -405,6 +405,20 @@ body {
   gap: 12px;
 }
 
+.chat-form > label,
+.chat-form > .chat-hint {
+  grid-column: 1 / -1;
+}
+
+.chat-input {
+  grid-column: 1 / 2;
+}
+
+.chat-send {
+  grid-column: 2 / 3;
+  min-width: 112px;
+}
+
 select {
   border-radius: 10px;
   border: 1px solid var(--line);
@@ -480,6 +494,11 @@ tbody tr:hover {
 
   .chat-form {
     grid-template-columns: 1fr;
+  }
+
+  .chat-input,
+  .chat-send {
+    grid-column: 1 / -1;
   }
 
   .topbar {

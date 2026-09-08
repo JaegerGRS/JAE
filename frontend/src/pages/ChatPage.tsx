@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, KeyboardEvent, useRef, useState } from "react";
 import { createConversation, getModels, getModelStatus, streamChat } from "../services/api";
 import type { ChatMessage, ModelInfo } from "../types/api";
 import { useEffect } from "react";
@@ -14,6 +14,7 @@ export function ChatPage() {
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [localModelIds, setLocalModelIds] = useState<string[]>([]);
   const [selectedModelId, setSelectedModelId] = useState<string>("auto");
+  const logRef = useRef<HTMLDivElement | null>(null);
   const { settings } = useUiSettings();
 
   useEffect(() => {
@@ -34,6 +35,14 @@ export function ChatPage() {
   useEffect(() => {
     setSelectedModelId(settings.preferredModelId || "auto");
   }, [settings.preferredModelId]);
+
+  useEffect(() => {
+    const log = logRef.current;
+    if (!log) {
+      return;
+    }
+    log.scrollTop = log.scrollHeight;
+  }, [messages, streaming]);
 
   async function ensureConversation(): Promise<number> {
     if (conversationId) {
@@ -100,9 +109,19 @@ export function ChatPage() {
     );
   }
 
+  function onInputKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      const form = event.currentTarget.form;
+      if (form) {
+        form.requestSubmit();
+      }
+    }
+  }
+
   return (
     <section className="page chat-page">
-      <div className="panel chat-log">
+      <div className="panel chat-log" ref={logRef}>
         {messages.length === 0 ? (
           <p className="muted">Start a chat to test model routing and streaming output.</p>
         ) : (
@@ -135,24 +154,26 @@ export function ChatPage() {
               </select>
             </label>
             {localModelIds.length === 0 && (
-              <p className="muted" style={{ margin: "0 0 8px" }}>
+              <p className="muted chat-hint" style={{ margin: "0 0 8px" }}>
                 No local models installed yet. Open Models and download one or more to enable manual switching.
               </p>
             )}
           </>
         )}
         {!settings.showChatModelPicker && (
-          <p className="muted" style={{ margin: "0 0 8px" }}>
+          <p className="muted chat-hint" style={{ margin: "0 0 8px" }}>
             Model and task behavior are managed in Settings.
           </p>
         )}
         <textarea
+          className="chat-input"
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onKeyDown={onInputKeyDown}
           placeholder="Ask JAE AI anything..."
           rows={3}
         />
-        <button type="submit" disabled={streaming}>
+        <button className="chat-send" type="submit" disabled={streaming}>
           {streaming ? "Streaming..." : "Send"}
         </button>
       </form>
