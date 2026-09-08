@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { LoadingSkeleton } from "../components/LoadingSkeleton";
 import { useUiSettings } from "../lib/uiSettings";
-import { getModels, getModelStatus, getSettings } from "../services/api";
-import type { ModelInfo, TaskType } from "../types/api";
+import { getModels, getModelStatus, getSettings, getStorageStatus, moveStorage } from "../services/api";
+import type { ModelInfo, StorageStatus, TaskType } from "../types/api";
 
 export function SettingsPage() {
   const { settings: uiSettings, updateSettings } = useUiSettings();
@@ -10,26 +10,45 @@ export function SettingsPage() {
   const [settings, setSettings] = useState<Record<string, unknown>>({});
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [localModelIds, setLocalModelIds] = useState<string[]>([]);
+  const [storage, setStorage] = useState<StorageStatus | null>(null);
+  const [storageMessage, setStorageMessage] = useState("");
+  const [movingStorage, setMovingStorage] = useState(false);
 
   useEffect(() => {
-    Promise.all([getSettings(), getModels(), getModelStatus()])
-      .then(([settingsRes, modelsRes, statusRes]) => {
+    Promise.all([getSettings(), getModels(), getModelStatus(), getStorageStatus()])
+      .then(([settingsRes, modelsRes, statusRes, storageRes]) => {
         setSettings(settingsRes.data);
         setModels((modelsRes.data.models as ModelInfo[]) || []);
         const local = ((statusRes.data.models as Array<{ id: string; exists: boolean }>) || [])
           .filter((m) => m.exists)
           .map((m) => m.id);
         setLocalModelIds(local);
+        setStorage(storageRes.data);
       })
       .catch(() => {
         setSettings({});
         setModels([]);
         setLocalModelIds([]);
+        setStorage(null);
       })
       .finally(() => setLoading(false));
   }, []);
 
   const localModels = models.filter((m) => localModelIds.includes(m.id));
+
+  async function handleMoveStorage(targetMode: "portable" | "native", driveRoot?: string) {
+    try {
+      setMovingStorage(true);
+      const result = await moveStorage(targetMode, driveRoot);
+      setStorageMessage(result.data.message);
+      const refreshed = await getStorageStatus();
+      setStorage(refreshed.data);
+    } catch (error) {
+      setStorageMessage(error instanceof Error ? error.message : "Storage move failed.");
+    } finally {
+      setMovingStorage(false);
+    }
+  }
 
   return (
     <section className="page">
@@ -193,6 +212,46 @@ export function SettingsPage() {
               <p>Inference Provider: {String(settings.inference_provider || "llamacpp")}</p>
               <p>OpenAI Base URL: {String(settings.openai_base_url || "-")}</p>
               <p className="muted">Operational and security controls are centralized in this page.</p>
+            </article>
+
+            <article className="settings-card settings-card-wide">
+              <h4>Chat Storage</h4>
+              <p className="muted">
+                JAE can auto-detect a portable USB chat vault or move chats back to this device for faster native drive speeds.
+              </p>
+              <p>Current Mode: {storage?.current_mode || "unknown"}</p>
+              <p>Current Root: {storage?.current_root || "-"}</p>
+              <p>Database: {storage?.database_path || "-"}</p>
+              <p>Native Root: {storage?.native_root || "-"}</p>
+              <p className="muted">{storage?.performance_hint || "Native drive is fastest. USB keeps chats portable."}</p>
+              <div className="storage-actions">
+                <button type="button" onClick={() => handleMoveStorage("native")} disabled={movingStorage}>
+                  Move Chats To This Device
+                </button>
+              </div>
+              <div className="storage-drive-list">
+                {(storage?.portable_drives || []).length === 0 ? (
+                  <p className="muted">No portable JAE USB drive detected yet. Insert a USB drive, then move chats to it.</p>
+                ) : (
+                  storage?.portable_drives.map((drive) => (
+                    <div key={drive.drive_root} className="storage-drive-card">
+                      <div>
+                        <strong>{drive.drive_root}</strong>
+                        <p className="muted">Portable Root: {drive.portable_root}</p>
+                        <p className="muted">{drive.marker_present ? "Portable vault detected" : "Removable drive ready for JAE portable chats"}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleMoveStorage("portable", drive.drive_root)}
+                        disabled={movingStorage}
+                      >
+                        Move Chats To USB
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+              {storageMessage ? <p className="muted settings-help">{storageMessage}</p> : null}
             </article>
           </div>
         )}

@@ -37,6 +37,15 @@ def test_supporters_endpoint() -> None:
     assert "members" in body["data"]
 
 
+def test_storage_status_endpoint() -> None:
+    response = client.get("/api/v1/storage")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["ok"] is True
+    assert "current_root" in body["data"]
+    assert "portable_drives" in body["data"]
+
+
 def test_chat_stream_returns_error_event_when_stream_fails() -> None:
     class DummyChatService:
         def create_conversation(self, db, title: str = "New Chat"):

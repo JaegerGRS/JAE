@@ -8,6 +8,8 @@ use std::sync::Mutex;
 use tauri::Manager;
 
 struct BackendState(Mutex<Option<Child>>);
+const PORTABLE_CONTAINER: &str = "JAE-Portable";
+const PORTABLE_MARKER: &str = "jae-portable.json";
 
 fn copy_dir_all(source: &Path, target: &Path) -> Result<(), String> {
     if !source.exists() {
@@ -29,11 +31,15 @@ fn copy_dir_all(source: &Path, target: &Path) -> Result<(), String> {
 }
 
 fn ensure_app_runtime(app: &tauri::AppHandle) -> Result<PathBuf, String> {
-    let app_data_dir = app
-        .path()
-        .app_data_dir()
-        .map_err(|err| err.to_string())?
-        .join("runtime");
+    let app_data_dir = if let Some(portable_root) = detect_portable_runtime() {
+        portable_root
+    } else {
+        app
+            .path()
+            .app_data_dir()
+            .map_err(|err| err.to_string())?
+            .join("runtime")
+    };
 
     fs::create_dir_all(&app_data_dir).map_err(|err| err.to_string())?;
     fs::create_dir_all(app_data_dir.join("data")).map_err(|err| err.to_string())?;
@@ -46,6 +52,17 @@ fn ensure_app_runtime(app: &tauri::AppHandle) -> Result<PathBuf, String> {
 
     copy_dir_all(&template_dir.join("config"), &app_data_dir.join("config"))?;
     Ok(app_data_dir)
+}
+
+fn detect_portable_runtime() -> Option<PathBuf> {
+    for letter in b'D'..=b'Z' {
+        let drive = format!("{}:\\", char::from(letter));
+        let candidate = PathBuf::from(drive).join(PORTABLE_CONTAINER).join("runtime");
+        if candidate.join(PORTABLE_MARKER).exists() {
+            return Some(candidate);
+        }
+    }
+    None
 }
 
 fn spawn_backend(app: &tauri::AppHandle) -> Result<Child, String> {

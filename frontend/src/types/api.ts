@@ -53,3 +53,30 @@ export type SupportersResponse = {
   description: string;
   members: SupporterInfo[];
 };
+
+export type StorageDriveInfo = {
+  drive_root: string;
+  portable_root: string;
+  device: string;
+  removable: boolean;
+  marker_present: boolean;
+};
+
+export type StorageStatus = {
+  current_root: string;
+  current_mode: string;
+  database_path: string;
+  portable_drives: StorageDriveInfo[];
+  native_root: string;
+  portable_container: string;
+  restart_required: boolean;
+  performance_hint: string;
+};
+
+export type StorageMoveResult = {
+  target_root: string;
+  target_mode: string;
+  database_path: string;
+  restart_required: boolean;
+  message: string;
+};

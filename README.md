@@ -25,6 +25,7 @@ Product defaults:
 - JAE can browse and scan internet sources for information when tool flows are enabled.
 - Selected AI models are open/free to use locally and do not require API keys.
 - Supporters can be shown from Ko-fi-linked GitHub usernames via config/supporters.json.
+- Chats can be moved to a USB portable vault or back to the local device for faster native-drive access.
 
 ## Requirements
 - Windows 10/11
@@ -68,6 +69,13 @@ Build native MSI installer:
 - The MSI build bundles a packaged Python backend runtime for local API services.
 - App runtime data is created in the local application data directory on first launch.
 - Config files are copied into the installed app runtime automatically.
+- If a USB drive contains a JAE portable vault marker, the desktop app auto-detects it at startup and opens chats from that portable runtime.
+
+## Portable Chat Storage
+- Open Settings and use the Chat Storage section to detect removable USB drives.
+- Move chats to a USB drive when you need to carry conversation history between Windows devices.
+- Move chats back to the local device when you want faster native-drive performance.
+- After moving storage, restart JAE so the desktop app reopens the chat database from the new location.
 
 ## Encrypted Sync
 - Run scripts/secure-sync.ps1 to create and push encrypted backup snapshots.
@@ -111,6 +119,7 @@ Versioned API prefix:
 - /api/v1/skills
 - /api/v1/agents
 - /api/v1/files
+- /api/v1/storage
 - /api/v1/settings
 - /api/v1/chat
 - /api/v1/chat/stream

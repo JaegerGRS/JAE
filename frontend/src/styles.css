@@ -317,6 +317,32 @@ a {
   margin: 0;
 }
 
+.storage-actions {
+  display: flex;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.storage-drive-list {
+  display: grid;
+  gap: 10px;
+}
+
+.storage-drive-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid #2f2f2f;
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.storage-drive-card p {
+  margin: 4px 0 0;
+}
+
 .settings-card h4 {
   margin: 0 0 10px;
 }
@@ -688,6 +714,11 @@ tbody tr:hover {
 
   .settings-card-wide {
     grid-column: auto;
+  }
+
+  .storage-drive-card {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .topbar {
