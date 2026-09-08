@@ -28,6 +28,7 @@ Run `scripts/clean-workspace.ps1` to remove local generated artifacts and runtim
 1. Run `scripts/dev.ps1`
 2. Use the Tauri desktop window for development
 3. Tauri manages the local backend process automatically (no separate server command needed)
+4. Dev server is pinned to `127.0.0.1:5173` to match Tauri `devUrl` and avoid blank/white windows
 
 ## Build MSI
 1. Run `scripts/build-tauri-msi.ps1`
