@@ -7,7 +7,8 @@ if (!(Test-Path .\.venv\Scripts\python.exe)) {
 
 Start-Process powershell -ArgumentList "-NoExit", "-Command", ".\.venv\Scripts\python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 8000"
 Push-Location frontend
-npm run build
+if (!(Test-Path .\node_modules)) {
+  npm install
+}
+npm run tauri:dev
 Pop-Location
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "Set-Location frontend; npm run preview -- --host 127.0.0.1 --port 4173"
-Write-Host "JAE AI started: backend http://127.0.0.1:8000 , frontend http://127.0.0.1:4173"

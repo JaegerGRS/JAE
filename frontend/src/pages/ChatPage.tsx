@@ -1,5 +1,5 @@
 import { FormEvent, KeyboardEvent, useRef, useState } from "react";
-import { chatOnce, createConversation, getModels, getModelStatus, streamChat } from "../services/api";
+import { chatOnce, createConversation, getHealth, getModels, getModelStatus, streamChat } from "../services/api";
 import type { ChatMessage, ModelInfo } from "../types/api";
 import { useEffect } from "react";
 import { useUiSettings } from "../lib/uiSettings";
@@ -14,22 +14,57 @@ export function ChatPage() {
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [localModelIds, setLocalModelIds] = useState<string[]>([]);
   const [selectedModelId, setSelectedModelId] = useState<string>("auto");
+  const [chatReady, setChatReady] = useState(false);
+  const [readinessMessage, setReadinessMessage] = useState("Checking local AI runtime...");
   const logRef = useRef<HTMLDivElement | null>(null);
   const { settings } = useUiSettings();
 
   useEffect(() => {
-    if (!settings.showChatModelPicker) {
-      return;
-    }
-    getModels().then((res) => setModels((res.data.models as ModelInfo[]) || [])).catch(() => setModels([]));
-    getModelStatus()
-      .then((res) => {
-        const local = ((res.data.models as Array<{ id: string; exists: boolean }>) || [])
+    let cancelled = false;
+
+    Promise.all([
+      settings.showChatModelPicker
+        ? getModels().then((res) => (res.data.models as ModelInfo[]) || [])
+        : Promise.resolve([] as ModelInfo[]),
+      getModelStatus(),
+      getHealth(),
+    ])
+      .then(([availableModels, statusRes, healthRes]) => {
+        if (cancelled) {
+          return;
+        }
+        setModels(availableModels);
+        const local = ((statusRes.data.models as Array<{ id: string; exists: boolean }>) || [])
           .filter((m) => m.exists)
           .map((m) => m.id);
         setLocalModelIds(local);
+        const inference = (healthRes.data.inference || {}) as { ok?: boolean; message?: string };
+        if (local.length === 0) {
+          setChatReady(false);
+          setReadinessMessage("Install at least one local model in Models before starting a chat.");
+          return;
+        }
+        if (!inference.ok) {
+          setChatReady(false);
+          setReadinessMessage(`Local AI runtime is offline: ${inference.message || "provider unavailable"}.`);
+          return;
+        }
+        setChatReady(true);
+        setReadinessMessage("Local AI runtime is ready.");
       })
-      .catch(() => setLocalModelIds([]));
+      .catch(() => {
+        if (cancelled) {
+          return;
+        }
+        setModels([]);
+        setLocalModelIds([]);
+        setChatReady(false);
+        setReadinessMessage("Unable to verify local AI runtime status.");
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [settings.showChatModelPicker]);
 
   useEffect(() => {
@@ -57,7 +92,7 @@ export function ChatPage() {
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     const text = input.trim();
-    if (!text || streaming) {
+    if (!text || streaming || !chatReady) {
       return;
     }
     const userMessage: UiMessage = { id: crypto.randomUUID(), role: "user", content: text };
@@ -158,7 +193,7 @@ export function ChatPage() {
     <section className="page chat-page">
       <div className="panel chat-log" ref={logRef}>
         {messages.length === 0 ? (
-          <p className="muted">Start a chat to test model routing and streaming output.</p>
+          <p className="muted">{chatReady ? "Start a chat to test model routing and streaming output." : readinessMessage}</p>
         ) : (
           messages.map((m) => (
             <article key={m.id} className={`msg ${m.role}`}>
@@ -205,10 +240,11 @@ export function ChatPage() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={onInputKeyDown}
-          placeholder="Ask JAE AI anything..."
+          placeholder={chatReady ? "Ask JAE AI anything..." : readinessMessage}
           rows={3}
+          disabled={!chatReady || streaming}
         />
-        <button className="chat-send" type="submit" disabled={streaming}>
+        <button className="chat-send" type="submit" disabled={!chatReady || streaming}>
           {streaming ? "Streaming..." : "Send"}
         </button>
         <p className="muted chat-hint" style={{ margin: 0 }}>

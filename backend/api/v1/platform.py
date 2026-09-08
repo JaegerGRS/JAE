@@ -144,7 +144,7 @@ async def updates_status(config=Depends(get_config)) -> ApiResponse:
             "current_version": config.version,
             "channel": "stable",
             "auto_update_policy": "AUTO_CHECK_HOURLY",
-            "auto_update_reference": "GitHub Actions + local scheduled sync task",
+            "auto_update_reference": "GitHub release channel + local scheduled sync task",
             "auto_updates": [
                 {
                     "name": "Auto Updates: Hourly Health Check",
@@ -162,6 +162,12 @@ async def updates_status(config=Depends(get_config)) -> ApiResponse:
                     "name": "Auto Updates: Pull Validate Push",
                     "description": "Pulls latest main, runs tests/build, and pushes only validated updates.",
                     "reference": "scripts/sync-validate-push.ps1",
+                    "status": "ACTIVE",
+                },
+                {
+                    "name": "Auto Updates: Tauri MSI Release Build",
+                    "description": "Builds native Windows MSI installers from GitHub for desktop releases.",
+                    "reference": ".github/workflows/build-tauri-msi.yml",
                     "status": "ACTIVE",
                 },
             ],

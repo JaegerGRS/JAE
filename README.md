@@ -33,8 +33,8 @@ Product defaults:
 
 ## Quick Start
 1. Run scripts/install.ps1
-2. Run scripts/dev.ps1
-3. Open frontend URL printed by Vite (default http://127.0.0.1:5173)
+2. Run scripts/run-desktop.ps1
+3. Use JAE AI as a native Windows desktop app
 
 Auto sync and publish workflow:
 1. Run scripts/sync-validate-push.ps1
@@ -48,25 +48,13 @@ Build native MSI installer:
 1. Run scripts/build-tauri-msi.ps1
 2. MSI output: frontend/src-tauri/target/release/bundle/msi/JAE AI_0.0.1_x64_en-US.msi
 
-## GitHub Website
-- This repository includes a GitHub Pages workflow at .github/workflows/deploy-pages.yml.
+## GitHub Release Channel
 - This repository includes CI checks at .github/workflows/ci.yml.
 - This repository includes an hourly auto update health check at .github/workflows/hourly-health-check.yml.
 - This repository includes a Windows Tauri MSI build workflow at .github/workflows/build-tauri-msi.yml.
-- On push to main, the frontend is built and deployed to GitHub Pages.
-- Base path is automatic:
-	- If repo name ends with .github.io, deploy base is /
-	- Otherwise deploy base is /<repo-name>/
-- Frontend API URL can be configured with repository variable VITE_API_BASE_URL.
-- If VITE_API_BASE_URL is not set, frontend defaults to local backend: http://127.0.0.1:8000/api/v1.
-
-Expected URL for this repository:
-- https://jaegergrs.github.io/Personal-AI.github.io/
-
-If site is not showing the built app:
-1. In GitHub repository Settings > Pages, set Source to GitHub Actions.
-2. If using branch deployment instead, set Source to Deploy from a branch and choose gh-pages / root.
-3. Re-run the latest workflow in Actions.
+- GitHub is used as the release, sync, and update channel for the desktop app.
+- Live chat, local files, and inference runtime stay inside the Windows app and local machine.
+- GitHub is not used as a live inference server or live search backend.
 
 ## Encrypted Sync
 - Run scripts/secure-sync.ps1 to create and push encrypted backup snapshots.
@@ -155,7 +143,7 @@ Do not edit defaults.yaml for machine-specific settings.
 - scripts/sync-validate-push.ps1
 
 ## Troubleshooting
-- If frontend cannot call API, verify backend is running on 127.0.0.1:8000.
+- If chat is unavailable, verify at least one local model is installed and the local inference runtime is online.
 - If inference health is offline, start your llama.cpp OpenAI-compatible server and ensure base URL matches config/defaults.yaml.
 - Run tests with .\\.venv\\Scripts\\python.exe -m pytest.
 

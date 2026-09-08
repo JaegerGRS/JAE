@@ -5,7 +5,9 @@ $patterns = @(
 	"uvicorn",
 	"vite",
 	"npm run dev",
-	"npm run preview"
+	"npm run tauri:dev",
+	"cargo",
+	"tauri"
 )
 
 Get-CimInstance Win32_Process |
