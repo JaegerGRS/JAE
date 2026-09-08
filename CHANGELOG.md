@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.3 - 2026-09-08
+- Refined the Chat experience with an image-inspired JAE studio layout that keeps real model routing, streaming, and voice flows in place.
+- Added a live right-side operational panel for system readiness and task-based model suggestions.
+- Strengthened JAE branding and explicit Tauri desktop runtime messaging in the app shell.
+- Reduced repository clutter to a focused script/workflow set for app delivery and GitHub updates.
+- Simplified docs and update metadata to align with the Tauri desktop shipping path.
+
 ## 0.1.0 - 2026-09-08
 - Initial Milestone 1 foundation.
 - FastAPI backend with hardware detection, tier selection, model manifest loading, model selection, health/system/models/settings/chat APIs, and SSE streaming.

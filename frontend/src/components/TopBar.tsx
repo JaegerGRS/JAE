@@ -35,11 +35,11 @@ export function TopBar() {
     <header className="topbar">
       <div>
         <h2>{pageTitle}</h2>
-        <p>Jaeger Adaptive Engine with private-by-default local controls</p>
+        <p>Jaeger Adaptive Engine with private-by-default local controls in a Tauri desktop runtime</p>
       </div>
       <div className="topbar-right">
         <div className="topbar-time">{now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
-        <div className="topbar-pill">desktop runtime</div>
+        <div className="topbar-pill">tauri desktop</div>
       </div>
     </header>
   );

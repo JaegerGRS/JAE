@@ -1,11 +1,36 @@
 import { FormEvent, KeyboardEvent, useRef, useState } from "react";
-import { chatOnce, createConversation, getHealth, getModels, getModelStatus, streamChat } from "../services/api";
+import {
+  chatOnce,
+  createConversation,
+  getHealth,
+  getModelRecommendations,
+  getModels,
+  getModelStatus,
+  getSystem,
+  streamChat,
+} from "../services/api";
 import type { ChatMessage, ModelInfo } from "../types/api";
 import { useEffect } from "react";
 import { useUiSettings } from "../lib/uiSettings";
 
 type UiMessage = ChatMessage & { id: string };
 type VoiceMode = "wake" | "direct" | null;
+
+type SystemSnapshot = {
+  cpu: string;
+  gpu: string;
+  ram: string;
+  ready: boolean;
+};
+
+const QUICK_PROMPTS = [
+  "Help me set up the best local model for coding.",
+  "Summarize this file and suggest next edits.",
+  "Brainstorm product ideas for my app.",
+  "Explain this error and propose a fix.",
+  "Design an implementation plan for this feature.",
+  "Compare two model options for my hardware.",
+];
 
 export function ChatPage() {
   const [conversationId, setConversationId] = useState<number | undefined>(undefined);
@@ -17,6 +42,14 @@ export function ChatPage() {
   const [selectedModelId, setSelectedModelId] = useState<string>("auto");
   const [chatReady, setChatReady] = useState(false);
   const [readinessMessage, setReadinessMessage] = useState("Checking local AI runtime...");
+  const [systemSnapshot, setSystemSnapshot] = useState<SystemSnapshot>({
+    cpu: "Unknown",
+    gpu: "Unknown",
+    ram: "Unknown",
+    ready: false,
+  });
+  const [recommendedModelId, setRecommendedModelId] = useState<string>("");
+  const [suggestedModelNames, setSuggestedModelNames] = useState<string[]>([]);
   const [voiceSupported, setVoiceSupported] = useState(false);
   const [voiceListening, setVoiceListening] = useState(false);
   const [voiceStatus, setVoiceStatus] = useState("Voice ready when enabled.");
@@ -145,37 +178,75 @@ export function ChatPage() {
   useEffect(() => {
     let cancelled = false;
 
-    Promise.all([
-      settings.showChatModelPicker
-        ? getModels().then((res) => (res.data.models as ModelInfo[]) || [])
-        : Promise.resolve([] as ModelInfo[]),
-      getModelStatus(),
-      getHealth(),
-    ])
-      .then(([availableModels, statusRes, healthRes]) => {
+    const load = async () => {
+      try {
+        const [availableModels, statusRes, healthRes] = await Promise.all([
+          settings.showChatModelPicker
+            ? getModels().then((res) => (res.data.models as ModelInfo[]) || [])
+            : Promise.resolve([] as ModelInfo[]),
+          getModelStatus(),
+          getHealth(),
+        ]);
+
         if (cancelled) {
           return;
         }
+
         setModels(availableModels);
+
         const local = ((statusRes.data.models as Array<{ id: string; exists: boolean }>) || [])
           .filter((m) => m.exists)
           .map((m) => m.id);
         setLocalModelIds(local);
+
         const inference = (healthRes.data.inference || {}) as { ok?: boolean; message?: string };
         if (local.length === 0) {
           setChatReady(false);
           setReadinessMessage("Install at least one local model in Models before starting a chat.");
-          return;
-        }
-        if (!inference.ok) {
+        } else if (!inference.ok) {
           setChatReady(false);
           setReadinessMessage(`Local AI runtime is offline: ${inference.message || "provider unavailable"}.`);
+        } else {
+          setChatReady(true);
+          setReadinessMessage("Local AI runtime is ready.");
+        }
+
+        const [systemRes, recommendationsRes] = await Promise.allSettled([
+          getSystem(),
+          getModelRecommendations(settings.defaultTaskType),
+        ]);
+
+        if (cancelled) {
           return;
         }
-        setChatReady(true);
-        setReadinessMessage("Local AI runtime is ready.");
-      })
-      .catch(() => {
+
+        if (systemRes.status === "fulfilled") {
+          const systemData = systemRes.value.data as Record<string, unknown>;
+          const hardware = (systemData.hardware as Record<string, unknown>) || {};
+          const cpu = (hardware.cpu as Record<string, unknown>) || {};
+          const gpus = (hardware.gpus as Array<Record<string, unknown>>) || [];
+          const primaryGpu = gpus[0] || null;
+          const gpuLabel = primaryGpu
+            ? `${String(primaryGpu.vendor || "GPU")} ${String(primaryGpu.model || "Unknown")}`
+            : "No discrete GPU";
+
+          setSystemSnapshot({
+            cpu: String(cpu.model || "Unknown CPU"),
+            gpu: gpuLabel,
+            ram: `${String(hardware.total_ram_gb || "?")} GB`,
+            ready: Boolean(inference.ok),
+          });
+        }
+
+        if (recommendationsRes.status === "fulfilled") {
+          const compatible = recommendationsRes.value.data.compatible_models || [];
+          setRecommendedModelId(recommendationsRes.value.data.selected_model_id || "");
+          setSuggestedModelNames(compatible.slice(0, 5).map((m) => m.name));
+        } else {
+          setRecommendedModelId("");
+          setSuggestedModelNames([]);
+        }
+      } catch {
         if (cancelled) {
           return;
         }
@@ -183,12 +254,15 @@ export function ChatPage() {
         setLocalModelIds([]);
         setChatReady(false);
         setReadinessMessage("Unable to verify local AI runtime status.");
-      });
+      }
+    };
+
+    void load();
 
     return () => {
       cancelled = true;
     };
-  }, [settings.showChatModelPicker]);
+  }, [settings.defaultTaskType, settings.showChatModelPicker]);
 
   useEffect(() => {
     setSelectedModelId(settings.preferredModelId || "auto");
@@ -356,11 +430,132 @@ export function ChatPage() {
     capabilityNotes.push("Selected AI models are open and free to use with no API keys required");
   }
 
+  const noModelsReady = localModelIds.length === 0;
+
   return (
     <section className="page chat-page">
+      <div className="chat-studio-grid">
+        <div className="panel chat-studio-main">
+          <p className="chat-kicker">Your Hardware. Your Models. Your AI.</p>
+          <h3 className="chat-hero-title">Powerful AI. Right at Home.</h3>
+          <p className="muted chat-hero-copy">
+            JAE runs as a private Tauri desktop app and routes your requests to the best local model for the current task.
+          </p>
+          <div className="chat-quick-row">
+            {QUICK_PROMPTS.map((prompt) => (
+              <button
+                key={prompt}
+                type="button"
+                className="quick-prompt"
+                onClick={() => {
+                  setInput(prompt);
+                  inputRef.current?.focus();
+                }}
+                disabled={!chatReady || streaming}
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+          <form className="chat-form" onSubmit={onSubmit}>
+            {settings.showChatModelPicker && (
+              <>
+                <label className="muted">
+                  Model
+                  <select
+                    value={selectedModelId}
+                    onChange={(e) => setSelectedModelId(e.target.value)}
+                    style={{ marginLeft: "8px", marginBottom: "8px" }}
+                  >
+                    <option value="auto">Auto (recommended for this device)</option>
+                    {models
+                      .filter((m) => localModelIds.includes(m.id))
+                      .map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.name} ({m.id})
+                        </option>
+                      ))}
+                  </select>
+                </label>
+                {localModelIds.length === 0 && (
+                  <p className="muted chat-hint" style={{ margin: "0 0 8px" }}>
+                    No local models installed yet. Open Models and download one or more to enable manual switching.
+                  </p>
+                )}
+              </>
+            )}
+            {!settings.showChatModelPicker && (
+              <p className="muted chat-hint" style={{ margin: "0 0 8px" }}>
+                Model and task behavior are managed in Settings.
+              </p>
+            )}
+            <textarea
+              className="chat-input"
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={onInputKeyDown}
+              placeholder={chatReady ? "Ask JAE anything..." : readinessMessage}
+              rows={3}
+              disabled={!chatReady || streaming}
+            />
+            <div className="chat-actions">
+              <button
+                className={`voice-button${voiceModeRef.current === "direct" ? " voice-button-live" : ""}`}
+                type="button"
+                onClick={onVoiceButtonClick}
+                disabled={!voiceSupported || !settings.voiceEnabled || !chatReady || streaming}
+              >
+                {voiceModeRef.current === "direct" ? "Stop Voice" : "Voice"}
+              </button>
+              <button className="chat-send" type="submit" disabled={!chatReady || streaming}>
+                {streaming ? "Streaming..." : "Send"}
+              </button>
+            </div>
+            <p className="muted chat-hint voice-status" style={{ margin: 0 }}>
+              {voiceStatus}
+            </p>
+            <p className="muted chat-hint" style={{ margin: 0 }}>
+              {capabilityNotes.join(". ") + "."}
+            </p>
+          </form>
+        </div>
+
+        <aside className="panel chat-side-panel">
+          <div className="side-card">
+            <div className="side-card-head">
+              <h4>Your System</h4>
+              <span className={`runtime-dot${chatReady ? " runtime-dot-on" : ""}`}>{chatReady ? "Ready" : "Offline"}</span>
+            </div>
+            <p><strong>CPU</strong> {systemSnapshot.cpu}</p>
+            <p><strong>GPU</strong> {systemSnapshot.gpu}</p>
+            <p><strong>RAM</strong> {systemSnapshot.ram}</p>
+            <p className="muted">Runtime: {systemSnapshot.ready ? "Healthy local inference" : readinessMessage}</p>
+          </div>
+
+          <div className="side-card">
+            <div className="side-card-head">
+              <h4>Model Suggestions</h4>
+              <span className="muted">{settings.defaultTaskType}</span>
+            </div>
+            {recommendedModelId ? <p className="muted">Recommended: {recommendedModelId}</p> : <p className="muted">Recommendation unavailable.</p>}
+            <div className="suggestion-list">
+              {suggestedModelNames.length > 0 ? (
+                suggestedModelNames.map((name) => (
+                  <span key={name} className="suggestion-pill">{name}</span>
+                ))
+              ) : (
+                <span className="suggestion-pill suggestion-pill-muted">No compatible models detected</span>
+              )}
+            </div>
+            {noModelsReady && <p className="muted">Install at least one local model in Models to start chatting.</p>}
+          </div>
+        </aside>
+      </div>
+
       <div className="panel chat-log" ref={logRef}>
         {messages.length === 0 ? (
-          <p className="muted">{chatReady ? "Start a chat to test model routing and streaming output." : readinessMessage}</p>
+          <p className="muted">{chatReady ? "Conversation output will appear here once you send a prompt." : readinessMessage}</p>
         ) : (
           messages.map((m) => (
             <article key={m.id} className={`msg ${m.role}`}>
@@ -370,68 +565,6 @@ export function ChatPage() {
           ))
         )}
       </div>
-      <form className="chat-form" onSubmit={onSubmit}>
-        {settings.showChatModelPicker && (
-          <>
-            <label className="muted">
-              Model
-              <select
-                value={selectedModelId}
-                onChange={(e) => setSelectedModelId(e.target.value)}
-                style={{ marginLeft: "8px", marginBottom: "8px" }}
-              >
-                <option value="auto">Auto (recommended for this device)</option>
-                {models
-                  .filter((m) => localModelIds.includes(m.id))
-                  .map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name} ({m.id})
-                    </option>
-                  ))}
-              </select>
-            </label>
-            {localModelIds.length === 0 && (
-              <p className="muted chat-hint" style={{ margin: "0 0 8px" }}>
-                No local models installed yet. Open Models and download one or more to enable manual switching.
-              </p>
-            )}
-          </>
-        )}
-        {!settings.showChatModelPicker && (
-          <p className="muted chat-hint" style={{ margin: "0 0 8px" }}>
-            Model and task behavior are managed in Settings.
-          </p>
-        )}
-        <textarea
-          className="chat-input"
-          ref={inputRef}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={onInputKeyDown}
-          placeholder={chatReady ? "Ask JAE anything..." : readinessMessage}
-          rows={3}
-          disabled={!chatReady || streaming}
-        />
-        <div className="chat-actions">
-          <button
-            className={`voice-button${voiceModeRef.current === "direct" ? " voice-button-live" : ""}`}
-            type="button"
-            onClick={onVoiceButtonClick}
-            disabled={!voiceSupported || !settings.voiceEnabled || !chatReady || streaming}
-          >
-            {voiceModeRef.current === "direct" ? "Stop Voice" : "Voice"}
-          </button>
-          <button className="chat-send" type="submit" disabled={!chatReady || streaming}>
-            {streaming ? "Streaming..." : "Send"}
-          </button>
-        </div>
-        <p className="muted chat-hint voice-status" style={{ margin: 0 }}>
-          {voiceStatus}
-        </p>
-        <p className="muted chat-hint" style={{ margin: 0 }}>
-          {capabilityNotes.join(". ") + "."}
-        </p>
-      </form>
     </section>
   );
 }
